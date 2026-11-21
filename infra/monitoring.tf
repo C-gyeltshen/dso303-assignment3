@@ -102,6 +102,35 @@ resource "aws_cloudwatch_metric_alarm" "db_cpu" {
   alarm_actions       = [aws_sns_topic.ops.arn]
 }
 
+resource "aws_cloudwatch_metric_alarm" "api_latency" {
+  alarm_name          = "${local.name}-api-p95-latency"
+  alarm_description   = "API p95 latency above 1 s (load-test SLO)"
+  namespace           = "AWS/ApiGateway"
+  metric_name         = "Latency"
+  dimensions          = { ApiId = aws_apigatewayv2_api.http.id, Stage = "$default" }
+  extended_statistic  = "p95"
+  period              = 60
+  evaluation_periods  = 3
+  threshold           = 1000
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.ops.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "db_credits" {
+  alarm_name          = "${local.name}-db-cpu-credits-low"
+  alarm_description   = "Burstable DB running out of CPU credits (load-test bottleneck #2)"
+  namespace           = "AWS/RDS"
+  metric_name         = "CPUCreditBalance"
+  dimensions          = { DBInstanceIdentifier = aws_db_instance.main.identifier }
+  statistic           = "Minimum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 20
+  comparison_operator = "LessThanThreshold"
+  alarm_actions       = [aws_sns_topic.ops.arn]
+}
+
 resource "aws_db_event_subscription" "failover" {
   name             = "${local.name}-db-events"
   sns_topic        = aws_sns_topic.ops.arn
@@ -110,35 +139,63 @@ resource "aws_db_event_subscription" "failover" {
   event_categories = ["failover", "failure", "availability"]
 }
 
-# ---------------- Dashboard ----------------
+# ---------------- Dashboard (also the load-test evidence screen) ----------------
+locals {
+  api_fn = local.fn_names["api"]
+}
+
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = local.name
   dashboard_body = jsonencode({
     widgets = [
-      { type = "metric", x = 0, y = 0, width = 12, height = 6, properties = {
-        title = "API requests / errors", region = var.region, stat = "Sum", period = 60,
+      { type = "metric", x = 0, y = 0, width = 8, height = 6, properties = {
+        title = "API requests / 4xx / 5xx", region = var.region, stat = "Sum", period = 60,
         metrics = [
           ["AWS/ApiGateway", "Count", "ApiId", aws_apigatewayv2_api.http.id, "Stage", "$default"],
           [".", "4xx", ".", ".", ".", "."],
           [".", "5xx", ".", ".", ".", "."]
       ] } },
-      { type = "metric", x = 12, y = 0, width = 12, height = 6, properties = {
-        title = "API latency p95 (ms)", region = var.region, stat = "p95", period = 60,
-        metrics = [["AWS/ApiGateway", "Latency", "ApiId", aws_apigatewayv2_api.http.id, "Stage", "$default"]]
-      } },
-      { type = "metric", x = 0, y = 6, width = 12, height = 6, properties = {
-        title = "Lambda concurrency", region = var.region, stat = "Maximum", period = 60,
-        metrics = [for k, n in local.fn_names : ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", n]]
-      } },
-      { type = "metric", x = 12, y = 6, width = 12, height = 6, properties = {
-        title = "RDS CPU / connections", region = var.region, stat = "Average", period = 60,
+      { type = "metric", x = 8, y = 0, width = 8, height = 6, properties = {
+        title = "API latency p50 / p95 / p99 (ms)", region = var.region, period = 60,
         metrics = [
-          ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", aws_db_instance.main.identifier],
-          [".", "DatabaseConnections", ".", ".", { yAxis = "right" }]
+          ["AWS/ApiGateway", "Latency", "ApiId", aws_apigatewayv2_api.http.id, "Stage", "$default", { stat = "p50" }],
+          ["...", { stat = "p95" }],
+          ["...", { stat = "p99" }]
       ] } },
-      { type = "metric", x = 0, y = 12, width = 24, height = 6, properties = {
+      { type = "metric", x = 16, y = 0, width = 8, height = 6, properties = {
+        title = "API Lambda: concurrency, throttles, PC spillover", region = var.region, period = 60,
+        metrics = [
+          ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", local.api_fn, { stat = "Maximum" }],
+          [".", "Throttles", ".", ".", { stat = "Sum" }],
+          [".", "ProvisionedConcurrencySpilloverInvocations", "FunctionName", local.api_fn, "Resource", "${local.api_fn}:live", { stat = "Sum" }],
+          ["AWS/Lambda", "ClaimedAccountConcurrency", { stat = "Maximum" }]
+      ] } },
+      { type = "metric", x = 0, y = 6, width = 8, height = 6, properties = {
+        title = "API Lambda duration p95 / init (ms)", region = var.region, period = 60,
+        metrics = [
+          ["AWS/Lambda", "Duration", "FunctionName", local.api_fn, { stat = "p95" }],
+          ["...", { stat = "Maximum" }]
+      ] } },
+      { type = "metric", x = 8, y = 6, width = 8, height = 6, properties = {
+        title = "RDS CPU % / CPU credit balance", region = var.region, period = 60,
+        metrics = [
+          ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", aws_db_instance.main.identifier, { stat = "Average" }],
+          [".", "CPUCreditBalance", ".", ".", { stat = "Minimum", yAxis = "right" }]
+      ] } },
+      { type = "metric", x = 16, y = 6, width = 8, height = 6, properties = {
+        title = "RDS Proxy: client vs DB connections", region = var.region, period = 60, stat = "Maximum",
+        metrics = [
+          ["AWS/RDS", "ClientConnections", "ProxyName", aws_db_proxy.main.name],
+          [".", "DatabaseConnections", ".", "."],
+          [".", "DatabaseConnectionsBorrowLatency", ".", ".", { yAxis = "right", stat = "Average" }]
+      ] } },
+      { type = "metric", x = 0, y = 12, width = 12, height = 6, properties = {
         title = "Queue backlog", region = var.region, stat = "Maximum", period = 60,
         metrics = [for k, q in aws_sqs_queue.q : ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", q.name]]
+      } },
+      { type = "metric", x = 12, y = 12, width = 12, height = 6, properties = {
+        title = "WAF blocked requests", region = "us-east-1", stat = "Sum", period = 60,
+        metrics = [["AWS/WAFV2", "BlockedRequests", "WebACL", aws_wafv2_web_acl.main.name, "Rule", "ALL"]]
       } }
     ]
   })

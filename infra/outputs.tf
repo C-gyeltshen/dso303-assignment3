@@ -41,3 +41,19 @@ output "migrate_function" {
 output "region" {
   value = var.region
 }
+
+output "api_function" {
+  value = aws_lambda_function.fn["api"].function_name
+}
+
+output "dashboard_url" {
+  value = "https://${var.region}.console.aws.amazon.com/cloudwatch/home?region=${var.region}#dashboards:name=${local.name}"
+}
+
+output "proxy_name" {
+  value = aws_db_proxy.main.name
+}
+
+output "api_id" {
+  value = aws_apigatewayv2_api.http.id
+}

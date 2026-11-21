@@ -1,4 +1,14 @@
 # ---------------- WAF (CloudFront scope => us-east-1) ----------------
+# Campus egress IPs are excluded from the per-IP rate limit: a 300-seat exam hall behind
+# one NAT address must never be blocked (failure test 4).
+resource "aws_wafv2_ip_set" "campus" {
+  provider           = aws.us_east_1
+  name               = "${local.name}-campus"
+  scope              = "CLOUDFRONT"
+  ip_address_version = "IPV4"
+  addresses          = var.campus_cidrs
+}
+
 resource "aws_wafv2_web_acl" "main" {
   provider = aws.us_east_1
   name     = "${local.name}-waf"
@@ -18,6 +28,15 @@ resource "aws_wafv2_web_acl" "main" {
       rate_based_statement {
         limit              = var.waf_rate_limit
         aggregate_key_type = "IP"
+        scope_down_statement {
+          not_statement {
+            statement {
+              ip_set_reference_statement {
+                arn = aws_wafv2_ip_set.campus.arn
+              }
+            }
+          }
+        }
       }
     }
     visibility_config {
@@ -161,6 +180,13 @@ resource "aws_cloudfront_distribution" "main" {
     origin_access_control_id = aws_cloudfront_origin_access_control.s3.id
   }
 
+  # A3: tutor downloads come through CloudFront (signed URLs) instead of S3 direct.
+  origin {
+    origin_id                = "files"
+    domain_name              = aws_s3_bucket.uploads.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.s3.id
+  }
+
   origin {
     origin_id   = "api"
     domain_name = replace(aws_apigatewayv2_api.http.api_endpoint, "https://", "")
@@ -191,6 +217,17 @@ resource "aws_cloudfront_distribution" "main" {
     compress                 = true
     cache_policy_id          = aws_cloudfront_cache_policy.api.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_except_host.id
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/submissions/*"
+    target_origin_id       = "files"
+    viewer_protocol_policy = "https-only"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = false
+    cache_policy_id        = data.aws_cloudfront_cache_policy.optimized.id
+    trusted_key_groups     = [aws_cloudfront_key_group.files.id]
   }
 
   # No custom error responses: the SPA uses hash routing (#/exam/1), so API 403/404s

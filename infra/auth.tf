@@ -58,7 +58,7 @@ resource "aws_cognito_user_pool_client" "web" {
   supported_identity_providers         = ["COGNITO"]
   callback_urls                        = ["${local.site_url}/", "http://localhost:5173/"]
   logout_urls                          = ["${local.site_url}/", "http://localhost:5173/"]
-  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_SRP_AUTH"]
+  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_ADMIN_USER_PASSWORD_AUTH"] # admin flow: load-test token script only
   prevent_user_existence_errors        = "ENABLED"
   access_token_validity                = 60
   id_token_validity                    = 60

@@ -10,6 +10,7 @@ exports.handler = async (event = {}) => {
   await db.query(sql);
   const out = { migrated: true };
   if (event.seed) Object.assign(out, await seed());
+  if (event.loadtest) Object.assign(out, await seedLoadTest(event.loadtest.exams || 6));
   const t = await db.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY 1");
   return { ...out, tables: t.rows.map((r) => r.table_name) };
 };
@@ -38,4 +39,24 @@ async function seed() {
     `INSERT INTO assignments (title, due_at, tutor_email, created_by)
      VALUES ('Demo: Architecture Report', now() + interval '30 days', $1, 'seed')`, [process.env.SES_SENDER]);
   return { seeded: true, examId: id };
+}
+
+// Load-test exams (scripts/loadtest): N open exams with 10 MCQs each, so 500 test users x 6 exams = 3,000 attempts.
+async function seedLoadTest(n) {
+  const ids = [];
+  for (let k = 1; k <= n; k += 1) {
+    const title = `Load test exam ${k}`;
+    const found = await db.query('SELECT id FROM exams WHERE title = $1', [title]);
+    if (found.rows.length) { ids.push(found.rows[0].id); continue; }
+    const e = await db.query(
+      `INSERT INTO exams (title, course, opens_at, closes_at, duration_mins, created_by)
+       VALUES ($1, 'LOAD', now() - interval '5 minutes', now() + interval '2 days', 120, 'loadtest') RETURNING id`, [title]);
+    for (let i = 0; i < 10; i += 1) {
+      await db.query(
+        'INSERT INTO questions (exam_id, position, type, text, options, correct_option, marks) VALUES ($1,$2,$3,$4,$5,$6,1)',
+        [e.rows[0].id, i, 'mcq', `Load question ${i + 1}`, JSON.stringify(['A', 'B', 'C', 'D']), i % 4]);
+    }
+    ids.push(e.rows[0].id);
+  }
+  return { loadTestExamIds: ids };
 }

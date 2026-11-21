@@ -1,99 +1,89 @@
-"""Regenerate architecture/architecture.png:  pip install diagrams && python architecture/diagram.py"""
+"""Assignment 3 revised architecture. Regenerate architecture/architecture.png:
+    pip install diagrams && python architecture/diagram.py
+Labels: [SPOF-R] = single point of failure removed, [SPOF-A] = accepted (see architecture/README.md), [A3] = changed in Assignment 3.
+"""
 from diagrams import Cluster, Diagram, Edge
-from diagrams.aws.network import Route53, CloudFront, APIGateway, NATGateway, InternetGateway, Endpoint
-from diagrams.aws.security import WAF, Cognito, SecretsManager, KMS, ACM, IAMRole
-from diagrams.aws.storage import S3
+from diagrams.aws.network import Route53, CloudFront, APIGateway, Endpoint, Privatelink
+from diagrams.aws.security import WAF, Cognito, SecretsManager, KMS
+from diagrams.aws.storage import S3, Backup
 from diagrams.aws.compute import Lambda
 from diagrams.aws.database import RDSPostgresqlInstance, RDS
 from diagrams.aws.integration import SQS
 from diagrams.aws.engagement import SES
-from diagrams.aws.management import Cloudwatch, Cloudtrail, CloudwatchAlarm
-from diagrams.aws.devtools import XRay
-from diagrams.aws.storage import Backup
+from diagrams.aws.management import Cloudwatch, CloudwatchAlarm, Cloudtrail
 from diagrams.onprem.client import Users
-from diagrams.onprem.vcs import Github
 from diagrams.onprem.ci import GithubActions
 
-graph = {"fontsize": "22", "pad": "0.5", "nodesep": "0.55", "ranksep": "0.9", "splines": "spline"}
+graph = {"fontsize": "22", "pad": "0.5", "nodesep": "1.0", "ranksep": "0.85", "splines": "spline",
+         "label": "[SPOF-R] = single point of failure removed   [SPOF-A] = accepted (see SPOF register)   [A3] = changed since Assignment 2",
+         "labelloc": "b"}
+red = {"fontcolor": "firebrick"}
 
-with Diagram("Online Exams & Assignments Platform (ap-south-1, 2 AZs)", filename="architecture/architecture",
-             show=False, direction="TB", graph_attr=graph, outformat="png"):
-    users = Users("Students / Tutors /\nAdmins (browser)")
+with Diagram("Exam platform – revised, cost-optimised (ap-southeast-1 Singapore, 2 AZs)",
+             filename="architecture/architecture", show=False, direction="TB", graph_attr=graph, outformat="png"):
+    users = Users("Students / tutors / admins\n(Bhutan, via CloudFront India edges)")
 
     with Cluster("Edge (global)"):
-        dns = Route53("Route 53")
-        waf = WAF("AWS WAF\n(rate limit + managed rules)")
-        cdn = CloudFront("CloudFront\n+ ACM TLS")
-
-    with Cluster("Identity"):
-        cognito = Cognito("Cognito User Pool\nstudents/tutors/admins")
+        dns = Route53("Route 53\n[SPOF-A: 100% SLA]")
+        waf = WAF("WAF: managed rules +\nrate limit, campus IPs exempt [A3]")
+        cdn = CloudFront("CloudFront\n/ -> SPA  /api -> API\n/submissions -> files (signed) [A3]")
 
     with Cluster("Regional managed services (multi-AZ by design)"):
-        web = S3("S3 frontend\n(private, OAC)")
-        api = APIGateway("API Gateway HTTP API\nJWT authorizer + throttling")
-        uploads = S3("S3 uploads\nSSE-KMS, versioned,\nlifecycle 5 yr")
-        q_upload = SQS("uploads-queue\n+ DLQ")
-        q_mark = SQS("marking-queue\n+ DLQ")
-        q_notify = SQS("notify-queue\n+ DLQ")
-        ses = SES("Amazon SES\nemail")
+        cognito = Cognito("Cognito (Essentials,\n8.4k MAU free)\n[SPOF-A: regional service]")
+        api = APIGateway("HTTP API + JWT authorizer\nthrottle 1,000 rps")
+        web = S3("S3 SPA bucket")
+        uploads = S3("S3 uploads: IA 30 d ->\nDeep Archive 180 d [A3]\n-> delete 5 y")
+        q = SQS("SQS: marking, uploads,\nnotify, email [A3] + DLQs")
+        mailer = Lambda("mailer Lambda\n(outside VPC) [A3]")
+        admin = Lambda("admin Lambda\n(outside VPC) [A3]")
+        ses = SES("SES\n[SPOF-A: queued + DLQ]")
 
-    with Cluster("VPC 10.0.0.0/16"):
-        igw = InternetGateway("IGW")
-        s3ep = Endpoint("S3 gateway\nendpoint")
+    with Cluster("VPC 10.0.0.0/16 – no NAT gateways, no internet route from private subnets [A3]"):
+        s3ep = Endpoint("S3 gateway endpoint\n(free)")
         with Cluster("AZ-a"):
-            with Cluster("Public 10.0.0.0/24"):
-                nat_a = NATGateway("NAT GW a")
             with Cluster("Private app 10.0.10.0/24"):
-                api_a = Lambda("API Lambda")
-                workers_a = Lambda("marker / upload-\nprocessor / notifier")
+                api_a = Lambda("API Lambda (alias live,\nprov. concurrency in exams)")
+                wk_a = Lambda("marker / upload-\nprocessor / notifier")
+                ep_a = Privatelink("SQS + Secrets\nendpoint ENIs")
             with Cluster("Private data 10.0.20.0/24"):
-                db_a = RDSPostgresqlInstance("RDS PostgreSQL\nPRIMARY")
+                db_a = RDSPostgresqlInstance("RDS PostgreSQL PRIMARY\nt4g.medium RI / t4g.large exams")
         with Cluster("AZ-b"):
-            with Cluster("Public 10.0.1.0/24"):
-                nat_b = NATGateway("NAT GW b")
             with Cluster("Private app 10.0.11.0/24"):
                 api_b = Lambda("API Lambda")
-                workers_b = Lambda("marker / upload-\nprocessor / notifier")
+                wk_b = Lambda("workers")
+                ep_b = Privatelink("SQS + Secrets\nendpoint ENIs")
             with Cluster("Private data 10.0.21.0/24"):
-                db_b = RDSPostgresqlInstance("RDS PostgreSQL\nSTANDBY")
-        proxy = RDS("RDS Proxy\n(both AZs)")
+                db_b = RDSPostgresqlInstance("RDS STANDBY\n[SPOF-R: sync replica]")
+        proxy = RDS("RDS Proxy, IAM auth [A3]\n[SPOF-R: multi-AZ]")
 
-    with Cluster("Security, ops & DR"):
-        secrets = SecretsManager("Secrets Manager\nDB credentials")
-        kms = KMS("KMS CMK")
-        cw = Cloudwatch("CloudWatch\nlogs/metrics/dashboard")
-        alarm = CloudwatchAlarm("Alarms -> SNS ops")
-        xray = XRay("X-Ray")
+    with Cluster("Security, ops, DR"):
+        kms = KMS("KMS CMK\n[SPOF-A: 7-day deletion window]")
+        secrets = SecretsManager("Secrets Manager\n(proxy only) [A3]")
+        cw = Cloudwatch("CloudWatch: JSON WARN logs,\n30 d, IA class [A3]")
+        alarm = CloudwatchAlarm("Alarms -> SNS\n(latency, throttles,\nDLQ, CPU credits)")
         trail = Cloudtrail("CloudTrail")
-        backup = Backup("AWS Backup\nPITR 5 min + monthly 5 yr")
-
-    with Cluster("CI/CD"):
-        gh = Github("GitHub repo\n(push to main)")
-        gha = GithubActions("GitHub Actions\nOIDC -> IAM role\nterraform apply")
+        backup = Backup("PITR 35 d (RPO 5 min)\n+ monthly 5 y")
+        ci = GithubActions("GitHub Actions -> Terraform\nexam_mode toggle [A3]")
 
     users >> dns >> cdn
-    waf - Edge(style="dashed", label="attached") - cdn
-    users >> Edge(label="sign-in (Hosted UI)") >> cognito
-    cdn >> Edge(label="/*") >> web
+    waf - Edge(style="dashed") - cdn
+    users >> Edge(label="sign-in") >> cognito
+    cdn >> web
     cdn >> Edge(label="/api/*") >> api
-    api - Edge(style="dashed", label="validate JWT") - cognito
+    cdn >> Edge(label="/submissions/* (OAC)") >> uploads
+    users >> Edge(label="presigned POST <= 50 MB", color="darkgreen") >> uploads
+    api - Edge(style="dashed") - cognito
     api >> [api_a, api_b]
-    users >> Edge(label="presigned POST\n(<=50 MB)", color="darkgreen") >> uploads
-    uploads >> Edge(label="ObjectCreated") >> q_upload
-    [api_a, api_b] >> proxy >> db_a
-    db_a - Edge(label="sync replication", style="dashed") - db_b
-    [api_a, api_b] >> Edge(label="submit / release") >> q_mark
-    [api_a, api_b] >> q_notify
-    q_upload >> workers_a
-    q_mark >> workers_b
-    q_notify >> workers_a
-    workers_a >> ses
-    workers_b >> proxy
-    cw >> alarm
-    nat_a >> igw
-    nat_b >> igw
-    api_a >> Edge(style="dotted", label="egress") >> nat_a
-    api_b >> Edge(style="dotted", label="egress") >> nat_b
+    api >> Edge(label="/api/admin/*") >> admin >> cognito
+    [api_a, api_b, wk_a, wk_b] >> proxy >> db_a
+    db_a - Edge(label="sync", style="dashed") - db_b
+    [api_a, wk_a] >> ep_a >> q
+    [api_b, wk_b] >> ep_b
+    uploads >> Edge(label="ObjectCreated") >> q
+    q >> [wk_a, wk_b]
+    q >> mailer >> ses
+    wk_a >> s3ep >> uploads
     proxy >> Edge(style="dotted") >> secrets
     db_a >> Edge(style="dotted") >> backup
-    gh >> gha >> Edge(label="deploy") >> cdn
+    cw >> alarm
+    ci >> Edge(style="dotted", label="deploy") >> cdn

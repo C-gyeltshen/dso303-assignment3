@@ -1,0 +1,9 @@
+{
+  "name": "exam-platform-loadtest",
+  "private": true,
+  "type": "module",
+  "description": "Creates load-test users and ID tokens for k6",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.700.0"
+  }
+}

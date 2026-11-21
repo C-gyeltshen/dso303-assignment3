@@ -4,7 +4,7 @@
 //   {type:'email', attemptId} -> send the result email (idempotent via notified_at)
 const { SQSClient, SendMessageBatchCommand } = require('@aws-sdk/client-sqs');
 const db = require('./db');
-const { sendEmail } = require('./email');
+const { queueEmail } = require('./email');
 
 const sqs = new SQSClient({});
 
@@ -30,7 +30,7 @@ async function emailResult(attemptId) {
   if (!r.rows.length) return false;
   const { student_email: to, title } = r.rows[0];
   try {
-    await sendEmail(to, `Results released: ${title}`,
+    await queueEmail(to, `Results released: ${title}`,
       `Your result for "${title}" is now available.\n\nSign in to view it: ${process.env.SITE_URL}/#/results`);
   } catch (e) {
     await db.query('UPDATE attempts SET notified_at = NULL WHERE id = $1', [attemptId]); // allow retry

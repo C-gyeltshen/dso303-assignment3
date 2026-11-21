@@ -38,3 +38,34 @@ The code is on GitHub, and OIDC means no AWS keys are stored. Terraform gives a 
 
 **What would you change for production scale?**
 `single_nat_gateway = false`, a bigger DB class (`db.t4g.medium`/`r7g`), deletion protection, reserved and provisioned concurrency for exam weeks, SES production access, federation with the university's SSO, and a cross-region backup copy for regional disaster recovery.
+
+---
+
+# Assignment 3 – extra viva questions
+
+**Why is the database still the biggest cost?**
+Multi-AZ means paying for two instances: primary and synchronous standby. That is the price of RPO 0 when an AZ fails. The Reserved Instance cuts the baseline by 27 %, and the larger class is only paid for in the two exam months.
+
+**How did you remove the NAT gateways without breaking anything?**
+Each private Lambda used NAT for one of four things:
+- S3: now the free gateway endpoint.
+- SQS: now an interface endpoint.
+- The DB secret: replaced by IAM auth to RDS Proxy, where the token is signed locally with no network call.
+- SES and Cognito: moved into Lambdas outside the VPC (`mailer`, `admin`), fed by a queue or the API.
+
+**What did the load test prove?**
+Quote your measured numbers. The method: R1 at the brief's peak (or a 60-s herd), the CloudWatch dashboard to find the metric that saturates (Throttles, ConcurrentExecutions, DB CPU, CPU credits), the fix through `exam_mode`, then R3 at the same load against the SLO (errors < 1 %, p95 < 1 s).
+
+**What are hidden costs and which mattered here?**
+Charges that don't come from the main service line. The ones that mattered:
+- NAT hourly charges ($86/month for two).
+- CloudWatch Logs and X-Ray, which scale with every request.
+- S3 egress for tutor downloads ($0.12/GB).
+- Duplicate backups.
+- SQS empty receives from Lambda pollers.
+
+**Why Singapore if Mumbai is cheaper and closer?**
+The brief requires Singapore. It still meets every target with about 66 % budget headroom. Page loads come from CloudFront edges in India either way, and autosave is asynchronous, so the extra ~40 ms only affects API calls.
+
+**What is still a single point of failure?**
+The Region itself (accepted; a 1-hour RTO can't cover it without a second Region), Cognito (a regional service) and the KMS key (protected by a deletion window). Everything else is either in both AZs or a multi-AZ managed service.

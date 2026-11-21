@@ -3,7 +3,7 @@
 // Validates the file, records the submission and emails the tutor.
 const { S3Client, GetObjectCommand, HeadObjectCommand, PutObjectTaggingCommand } = require('@aws-sdk/client-s3');
 const db = require('./db');
-const { sendEmail } = require('./email');
+const { queueEmail } = require('./email');
 
 const s3 = new S3Client({});
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -46,7 +46,7 @@ async function processObject(bucket, key) {
   const assignment = a.rows[0];
   if (status === 'received' && assignment) {
     const mb = (head.ContentLength / 1024 / 1024).toFixed(1);
-    await sendEmail(
+    await queueEmail(
       assignment.tutor_email,
       `New submission: ${assignment.title}`,
       `${studentEmail || studentSub} submitted "${fileName}" (${mb} MB) for "${assignment.title}".\n\n` +

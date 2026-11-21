@@ -1,117 +1,101 @@
-# Online Exams & Assignments Platform on AWS
+# Online Exams & Assignments Platform on AWS – cost, resilience and load (Assignment 3)
 
-Cloud architecture for a university (8,000 students, ~400 staff) moving all exams and assignment submissions online.
+Revised, cost-optimised version of the Assignment 2 platform, moved to **Asia Pacific (Singapore) `ap-southeast-1`** for 8,000 students and about 400 staff.
 
-- **Targets met by design:** 99.9 % availability during exams · survives the loss of one AZ · RPO ≤ 5 min · RTO ≤ 1 h · 5-year retention · encryption in transit (TLS everywhere) and at rest (KMS)
-- **Peak:** 3,000 students starting one exam within 5 minutes, autosave every 30 s (≈100 writes/s)
+## Summary
+
+- **Cost:** **$4,089/year**, an average of **$341/month** (normal month $302, exam month $533), which is **$0.51 per student per year**. That is 21 % below the Assignment 2 design priced in Singapore ($5,181/yr).
+- **What changed:**
+  - NAT gateways replaced by VPC endpoints.
+  - Reserved Instance for the database, with an `exam_mode` switch for exam months.
+  - Leaner logging; X-Ray removed.
+  - Glacier Deep Archive for the 5-year file retention.
+  - Tutor downloads through CloudFront.
+  - WAF rate limit no longer applies to campus IPs.
+
+  Details: [change log](architecture/README.md#what-changed-and-why).
+- **Tested:** four failure scenarios measured against RPO and RTO ([`infra/failure-tests.md`](infra/failure-tests.md)), and a k6 load test of the exam peak with CloudWatch evidence ([`infra/load-test.md`](infra/load-test.md)).
+
+## Feasibility verdict
+
+| Requirement | Result |
+|---|---|
+| Budget ≤ $1,000/month (yearly average) | **Meets**: $341/month; the costliest month ($533) is still 47 % under budget |
+| Peak: 3,000 students start within 5 min | **Meets once load test R3 passes** (exam_mode: t4g.large + 100 provisioned concurrency). _Add measured p95 / error % here_ |
+| RPO ≤ 5 min | **Meets**: AZ loss 0 (synchronous standby); corruption ≤ 5 min (PITR) |
+| RTO ≤ 1 h | **Meets**: AZ loss ≈ 2 min, bad deploy < 5 min, PITR restore ≈ 20–45 min. _Add measured values_ |
+| Survive loss of one AZ | **Meets**: every tier in two AZs, no NAT single point of failure |
+| Files kept 5 years | **Meets**: S3 lifecycle + monthly backups kept 1,825 days |
+
+**Overall: feasible.** The remaining risks are operational. Raise the Lambda concurrency and SES sending quotas before the first exam week, and rehearse the PITR runbook. Mumbai would be about 8 % cheaper and closer to Bhutan ([region comparison](docs/cost-report.md#5-region-singapore-vs-mumbai)).
+
+## Links
+
+| Item | Link |
+|---|---|
+| AWS Pricing Calculator – normal month | _paste share link_ |
+| AWS Pricing Calculator – exam month | _paste share link_ |
+| AWS Pricing Calculator – A2 baseline / Mumbai | _paste share links_ |
+| **Demo video** (≤ 5 min, own voice: one failure test + the load test) | _paste link_ |
+
+## Deliverables
 
 | Deliverable | Where |
 |---|---|
-| Architecture diagram, walkthroughs, peak/AZ explanation | [`architecture/`](architecture/README.md) |
-| Service table (role, why over an alternative, configuration, connections) | [`docs/services.md`](docs/services.md) |
-| Cloud Architecture Lab build guide | [`architecture/cloud-architecture-lab.md`](architecture/cloud-architecture-lab.md) |
-| Evidence (lab screenshots, failover log) | [`evidence/`](evidence/README.md) |
-| Infrastructure as code (Terraform) | [`infra/`](infra) |
-| Lambda backend (Node.js 22) | [`backend/`](backend) |
-| Frontend SPA | [`frontend/`](frontend) |
-| CI/CD | [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) |
-
-## Architecture summary
-
-Route 53 → **CloudFront + WAF** → S3 (SPA) and **API Gateway HTTP API** (Cognito JWT authorizer) → **Lambda** in private subnets across **two AZs** → **RDS Proxy** → **RDS PostgreSQL Multi-AZ** in private data subnets. Assignment files go **directly to S3** via presigned POST (≤ 50 MB, SSE-KMS, lifecycle to Glacier, deleted after 5 years). Marking, upload processing and emails run asynchronously through **SQS → Lambda → SES**. Secrets Manager holds DB credentials, KMS encrypts data at rest, CloudWatch/X-Ray/CloudTrail provide monitoring and audit, AWS Backup keeps monthly DB backups for 5 years. Everything is deployed by **Terraform from GitHub Actions** on every push to `main`.
-
-![architecture](architecture/architecture.png)
-
-## Repository layout
-
-```
-architecture/   diagram (PNG + diagram.py source), walkthroughs, lab guide
-docs/           services.md, viva-notes.md
-evidence/       screenshots from the Cloud Architecture Lab and AWS
-infra/          Terraform: network, security, database, storage, auth, queues, lambda, api, edge, monitoring
-infra/bootstrap one-off: Terraform state bucket + GitHub OIDC deploy role
-backend/        Lambda handlers (api, marker, uploadProcessor, notifier, migrate) + unit tests
-frontend/       static SPA (Cognito Hosted UI + PKCE, exam autosave, uploads)
-scripts/        create-test-users.sh, simulate-az-loss.sh
-```
+| Revised diagram, single-point-of-failure register, change log | [`architecture/`](architecture/README.md) (A2 version kept in `architecture-a2.png` / `assignment2.md`) |
+| Cost and service report | [`docs/cost-report.md`](docs/cost-report.md), generated from [`docs/cost-model.py`](docs/cost-model.py) |
+| Calculator inputs for both profiles | [`docs/calculator-inputs.md`](docs/calculator-inputs.md) |
+| Failure test scenarios (impact, measurement, fix) | [`infra/failure-tests.md`](infra/failure-tests.md) + [`scripts/failure/`](scripts/failure) |
+| Load test plan and results | [`infra/load-test.md`](infra/load-test.md) + [`scripts/loadtest/`](scripts/loadtest) |
+| Calculator exports, test logs, screenshots | [`evidence/`](evidence/README.md) |
+| Service table | [`docs/services.md`](docs/services.md) |
+| Infrastructure as code / CI/CD | [`infra/`](infra), [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) |
 
 ## Deploy
 
-### Prerequisites
-- AWS account, AWS CLI v2 signed in as an admin, Terraform ≥ 1.10, Node.js 22, a GitHub repository.
-- An email address you can receive mail on (SES sandbox: sender and recipients must be verified).
+Same as Assignment 2, now in Singapore:
 
-### 1. Bootstrap (once, from your laptop)
+1. **Bootstrap once:** `cd infra/bootstrap && terraform init && terraform apply -var github_repo=<user>/<repo>`.
+2. **GitHub secrets:** `AWS_DEPLOY_ROLE_ARN`, `TF_STATE_BUCKET`. **Variables:** `ALARM_EMAIL`, `SES_SENDER_EMAIL`, `SES_VERIFY_EMAILS`.
+3. **Push to `main`.** The pipeline tests, applies Terraform, migrates the database, deploys the SPA and smoke-tests it.
+4. **Exam month:** set `exam_mode = true` in [`infra/prod.auto.tfvars`](infra/prod.auto.tfvars), commit and push. Set it back to `false` afterwards. The DB resize causes a ~1-minute Multi-AZ failover, so do it outside exam hours.
+
+> New AWS accounts often have a Lambda concurrency limit of 10. Request an increase (Service Quotas → Lambda → Concurrent executions, e.g. 1,000) before turning on `exam_mode`, because 100 provisioned concurrency needs it.
+
+## Running the tests
+
 ```bash
-cd infra/bootstrap
-terraform init
-terraform apply -var github_repo=<your-github-user>/<repo>
-# note the outputs: state_bucket, deploy_role_arn
+# Load test (needs k6: https://k6.io)
+./scripts/loadtest/setup.sh 500 6        # 6 exams x 500 students = 3,000 attempts
+cd scripts/loadtest && k6 run -e BASE_URL=<site_url> -e EXAM_IDS=<ids> -e START_WINDOW=60 \
+     --summary-export ../../evidence/loadtest-R1-k6.json exam-peak.js
+cd ../.. && ./scripts/loadtest/collect-metrics.sh R1 <start-utc> <end-utc>
+
+# Failure tests
+./scripts/failure/probe.sh f1 600 &      # RPO/RTO probe in parallel
+./scripts/failure/f1-az-loss.sh          # then: terraform -chdir=infra apply  (restore)
+./scripts/failure/f2-pitr-restore.sh
+./scripts/failure/f3-bad-deploy.sh
+./scripts/failure/f4-exam-hall-waf.sh before    # then add your IP to campus_cidrs, apply, run "after"
+
+# Cost model
+python3 docs/build-cost-report.py        # regenerates docs/cost-report.md after price edits
 ```
 
-### 2. Configure GitHub
-Repository → Settings → Secrets and variables → Actions:
+## Demo video plan (≤ 5 minutes, your own voice)
 
-| Type | Name | Value |
-|---|---|---|
-| Secret | `AWS_DEPLOY_ROLE_ARN` | `deploy_role_arn` output |
-| Secret | `TF_STATE_BUCKET` | `state_bucket` output |
-| Variable | `ALARM_EMAIL` | your email |
-| Variable | `SES_SENDER_EMAIL` | your email (sender) |
-| Variable | `SES_VERIFY_EMAILS` | `["tutor.test@example.com","student.test@example.com"]` |
-| Variable | `SINGLE_NAT_GATEWAY` | `true` for a cheap demo, `false` for production |
-
-### 3. Push to `main`
-```bash
-git push origin main
-```
-The pipeline runs tests → `terraform plan/apply` → database migration (with demo exam + assignment seed) → uploads the SPA with a generated `config.js` → invalidates CloudFront → smoke-tests `/api/health`. Pull requests run the same checks plus `terraform plan` without applying. First deploy takes ~20–25 min (RDS Multi-AZ + CloudFront).
-
-### 4. After the first deploy
-1. Click the verification links SES and SNS send to your inboxes.
-2. Create demo users:
-   ```bash
-   cd infra && terraform init -backend-config="bucket=<state_bucket>" -backend-config="key=prod/terraform.tfstate" -backend-config="region=ap-south-1" && cd ..
-   ./scripts/create-test-users.sh student.test@example.com tutor.test@example.com admin.test@example.com 'Demo-Passw0rd!'
-   ```
-3. Open the `site_url` output, sign in as the student, open **Demo: Cloud Computing Quiz** and upload a PDF to **Demo: Architecture Report**.
-
-### Local deploy (without CI)
-```bash
-cd backend && npm ci --omit=dev && cd ../infra
-cp backend.hcl.example backend.hcl && cp terraform.tfvars.example terraform.tfvars   # edit both
-terraform init -backend-config=backend.hcl
-terraform apply
-```
-then run the "Migrate" and "Deploy frontend" steps from the workflow by hand.
-
-## Demonstrating the requirements (video script)
-
-| Requirement | How to show it |
+| Time | Show |
 |---|---|
-| Frontend + API | Sign in as student, list exams (`/api/exams`) |
-| Autosave | Answer a question, wait 30 s → "Saved hh:mm:ss"; refresh the page → answers return |
-| Two-AZ database | RDS console → Multi-AZ **Yes**, primary and secondary AZ shown |
-| S3 uploads | Upload a ~40 MB PDF, show progress bar and the object in S3 (encrypted, KMS) |
-| Async step | Show the `upload-processor` log in CloudWatch and the tutor email; submit the exam and show the MCQ score appear (marker Lambda) |
-| AZ loss | `./scripts/simulate-az-loss.sh` → `evidence/az-failover-log.txt` shows the DB moving to the other AZ while `/api/health` keeps answering; then `terraform -chdir=infra apply` to restore |
-| CI/CD | Change some text in `frontend/index.html`, push to `main`, show the pipeline and the change live |
+| 0:00–0:40 | Revised diagram: what changed and why (NAT → endpoints, exam_mode, SPOF register) |
+| 0:40–1:20 | Calculator estimates for both profiles; $341/month vs the $1,000 budget |
+| 1:20–3:00 | **Load test:** k6 running, CloudWatch dashboard showing the bottleneck (throttles / DB CPU), the `exam_mode` commit, and the re-run passing |
+| 3:00–4:30 | **Failure test F1 (AZ loss):** probe output, the RDS failover event, measured RTO and "0 autosaves lost" |
+| 4:30–5:00 | Verdict |
 
 ## Tear down
+
 ```bash
-cd infra
-terraform destroy          # with the same backend config / variables used to deploy
-cd bootstrap
-terraform destroy          # removes state bucket (empty it first: aws s3 rm s3://<state_bucket> --recursive) and OIDC role
+terraform -chdir=infra destroy
+# then empty and destroy the bootstrap state bucket: infra/bootstrap -> terraform destroy
 ```
-Notes: set `deletion_protection = false` before destroying (it is the default for the demo). The KMS key is scheduled for deletion after 7 days. If destroy reports the backup vault isn't empty, delete its recovery points in the AWS Backup console and run destroy again.
-
-## Cost guide (ap-south-1, demo settings)
-Roughly **USD 3–4 per day** while deployed (estimate – check the AWS Pricing Calculator): one NAT gateway ≈ $1.3/day, RDS `db.t4g.micro` Multi-AZ ≈ $1/day, RDS Proxy ≈ $0.7/day; Lambda, API Gateway, SQS, S3 and CloudFront are pennies at demo traffic. **Destroy when you're done recording.**
-
-## Security summary
-- No public database; RDS reachable only from RDS Proxy's security group; data subnets have no internet route.
-- TLS everywhere: CloudFront HTTPS-only, `rds.force_ssl`, RDS Proxy `require_tls`, S3 bucket policy denies non-TLS.
-- At rest: KMS CMK for RDS, S3 uploads, Secrets Manager, CloudWatch Logs, SNS; SSE for SQS and other buckets.
-- Least-privilege IAM role per Lambda; CI uses short-lived OIDC credentials, no stored AWS keys.
-- WAF managed rules + per-IP rate limit; API Gateway throttling; Cognito with optional TOTP MFA and admin-only account creation.
+Delete any `*-pitr-test` instance left by F2, any load-test Cognito users (they are in the pool and go with it), and AWS Backup recovery points if destroy reports the vault isn't empty.

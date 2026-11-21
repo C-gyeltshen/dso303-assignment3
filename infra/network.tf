@@ -1,5 +1,5 @@
 # VPC with three subnet tiers in each of two AZs:
-#   public       10.0.0.0/24, 10.0.1.0/24   -> NAT gateways
+#   public       10.0.0.0/24, 10.0.1.0/24   -> reserved (no NAT in A3; IGW kept for future public endpoints)
 #   private app  10.0.10.0/24, 10.0.11.0/24 -> Lambda ENIs, RDS Proxy
 #   private data 10.0.20.0/24, 10.0.21.0/24 -> RDS primary / standby
 
@@ -56,34 +56,13 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# --- NAT gateways (one per AZ unless single_nat_gateway) ---
-locals {
-  nat_count = var.single_nat_gateway ? 1 : 2
-}
-
-resource "aws_eip" "nat" {
-  count  = local.nat_count
-  domain = "vpc"
-  tags   = { Name = "${local.name}-nat-eip-${count.index}" }
-}
-
-resource "aws_nat_gateway" "nat" {
-  count         = local.nat_count
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
-  tags          = { Name = "${local.name}-nat-${local.azs[count.index]}" }
-  depends_on    = [aws_internet_gateway.igw]
-}
-
-# --- Private app routing: each AZ uses its own NAT ---
+# --- Private app routing: NO internet route (A3: NAT gateways removed).
+# Lambdas reach S3 through the free gateway endpoint and SQS / Secrets Manager
+# through interface endpoints that have an ENI in each AZ.
 resource "aws_route_table" "app" {
   count  = 2
   vpc_id = aws_vpc.main.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat[var.single_nat_gateway ? 0 : count.index].id
-  }
-  tags = { Name = "${local.name}-app-rt-${local.azs[count.index]}" }
+  tags   = { Name = "${local.name}-app-rt-${local.azs[count.index]}" }
 }
 
 resource "aws_route_table_association" "app" {
@@ -113,6 +92,31 @@ resource "aws_vpc_endpoint" "s3" {
   tags              = { Name = "${local.name}-s3-endpoint" }
 }
 
+# --- Interface endpoints (one ENI per AZ, so no single point of failure) ---
+resource "aws_security_group" "endpoints" {
+  name        = "${local.name}-endpoints-sg"
+  description = "Interface VPC endpoints"
+  vpc_id      = aws_vpc.main.id
+  ingress {
+    description = "HTTPS from inside the VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+}
+
+resource "aws_vpc_endpoint" "interface" {
+  for_each            = toset(["sqs", "secretsmanager"])
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${var.region}.${each.key}"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.app[*].id
+  security_group_ids  = [aws_security_group.endpoints.id]
+  private_dns_enabled = true
+  tags                = { Name = "${local.name}-${each.key}-endpoint" }
+}
+
 # --- Security groups ---
 resource "aws_security_group" "lambda" {
   name        = "${local.name}-lambda-sg"
@@ -120,11 +124,18 @@ resource "aws_security_group" "lambda" {
   vpc_id      = aws_vpc.main.id
 
   egress {
-    description = "HTTPS to AWS APIs via NAT / endpoints"
+    description = "HTTPS to interface endpoints"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
+  }
+  egress {
+    description     = "HTTPS to S3 via gateway endpoint"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    prefix_list_ids = [aws_vpc_endpoint.s3.prefix_list_id]
   }
   egress {
     description = "PostgreSQL to RDS Proxy"
@@ -155,11 +166,11 @@ resource "aws_security_group" "proxy" {
     cidr_blocks = [for s in aws_subnet.data : s.cidr_block]
   }
   egress {
-    description = "Secrets Manager via NAT"
+    description = "Secrets Manager interface endpoint"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 }
 
@@ -180,7 +191,8 @@ resource "aws_security_group" "db" {
 # --- VPC flow logs ---
 resource "aws_cloudwatch_log_group" "flow" {
   name              = "/vpc/${local.name}/flow-logs"
-  retention_in_days = 90
+  log_group_class   = "INFREQUENT_ACCESS" # A3: half-price ingestion, only read during investigations
+  retention_in_days = 30
   kms_key_id        = aws_kms_key.main.arn
 }
 

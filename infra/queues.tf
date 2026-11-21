@@ -3,6 +3,7 @@ locals {
     marking = { visibility = 60 }
     uploads = { visibility = 180 }
     notify  = { visibility = 180 }
+    email   = { visibility = 90 } # A3: all email goes through one queue to the mailer Lambda (outside the VPC)
   }
 }
 

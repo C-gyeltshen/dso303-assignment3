@@ -77,14 +77,24 @@ resource "aws_s3_bucket_policy" "uploads" {
   bucket = aws_s3_bucket.uploads.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Sid       = "DenyInsecureTransport"
-      Effect    = "Deny"
-      Principal = "*"
-      Action    = "s3:*"
-      Resource  = [aws_s3_bucket.uploads.arn, "${aws_s3_bucket.uploads.arn}/*"]
-      Condition = { Bool = { "aws:SecureTransport" = "false" } }
-    }]
+    Statement = [
+      {
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [aws_s3_bucket.uploads.arn, "${aws_s3_bucket.uploads.arn}/*"]
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      },
+      {
+        Sid       = "CloudFrontOACReadSubmissions"
+        Effect    = "Allow"
+        Principal = { Service = "cloudfront.amazonaws.com" }
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.uploads.arn}/submissions/*"
+        Condition = { StringEquals = { "AWS:SourceArn" = aws_cloudfront_distribution.main.arn } }
+      }
+    ]
   })
   depends_on = [aws_s3_bucket_public_access_block.uploads]
 }
@@ -113,7 +123,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "uploads" {
     }
     transition {
       days          = 180
-      storage_class = "GLACIER"
+      storage_class = "DEEP_ARCHIVE" # A3: was GLACIER (Flexible); 56% cheaper, 12-48 h restore is fine for 5-year records
     }
     expiration {
       days = 1825

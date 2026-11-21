@@ -11,7 +11,7 @@ variable "environment" {
 
 variable "region" {
   type    = string
-  default = "ap-south-1"
+  default = "ap-southeast-1" # A3: Asia Pacific (Singapore), as required by the brief
 }
 
 variable "vpc_cidr" {
@@ -19,15 +19,40 @@ variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
 
-variable "single_nat_gateway" {
-  description = "true = one NAT gateway (cheap demo). false = one per AZ (production, survives AZ loss)."
+variable "exam_mode" {
+  description = "Exam-month settings (load-test finding): larger DB class and provisioned concurrency on the API. Flip in terraform.tfvars a week before exams; the pipeline applies it."
   type        = bool
   default     = false
 }
 
 variable "db_instance_class" {
-  type    = string
-  default = "db.t4g.micro" # use db.t4g.medium or larger in production
+  description = "Normal-month DB class (covered by a 1-year Reserved Instance)"
+  type        = string
+  default     = "db.t4g.medium"
+}
+
+variable "db_instance_class_exam" {
+  description = "Exam-month DB class"
+  type        = string
+  default     = "db.t4g.large"
+}
+
+variable "api_provisioned_concurrency" {
+  description = "Provisioned concurrency on the API alias while exam_mode = true"
+  type        = number
+  default     = 100
+}
+
+variable "campus_cidrs" {
+  description = "University NAT/public IP ranges exempt from the WAF per-IP rate limit (failure test 4 fix)"
+  type        = list(string)
+  default     = []
+}
+
+variable "api_log_level" {
+  description = "Application log level for the API Lambda (WARN in production to cut CloudWatch Logs cost)"
+  type        = string
+  default     = "WARN"
 }
 
 variable "db_multi_az" {
@@ -39,18 +64,6 @@ variable "deletion_protection" {
   description = "Protect the database from deletion. Set false for a demo you will tear down."
   type        = bool
   default     = false
-}
-
-variable "api_reserved_concurrency" {
-  description = "Reserved concurrency for the API Lambda (-1 = unreserved). Production: 300. New AWS accounts often have a 10-concurrency quota, so keep -1 there."
-  type        = number
-  default     = -1
-}
-
-variable "worker_reserved_concurrency" {
-  description = "Reserved concurrency for marker/notifier (-1 = unreserved)"
-  type        = number
-  default     = -1
 }
 
 variable "alarm_email" {

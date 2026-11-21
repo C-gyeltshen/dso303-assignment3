@@ -1,20 +1,29 @@
 'use strict';
 // API Lambda: one function behind `ANY /api/{proxy+}` with a small router.
 const crypto = require('node:crypto');
-const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client } = require('@aws-sdk/client-s3');
 const { createPresignedPost } = require('@aws-sdk/s3-presigned-post');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { getSignedUrl } = require('@aws-sdk/cloudfront-signer');
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
-const {
-  CognitoIdentityProviderClient, AdminCreateUserCommand, AdminAddUserToGroupCommand,
-} = require('@aws-sdk/client-cognito-identity-provider');
+const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
 const db = require('./db');
 const { HttpError, json, getUser, requireRole, parseBody } = require('./http');
 const { markAttempt } = require('./marking');
 
 const s3 = new S3Client({});
 const sqs = new SQSClient({});
-const cognito = new CognitoIdentityProviderClient({});
+const sm = new SecretsManagerClient({});
+
+// CloudFront signing key: fetched once per container (via the Secrets Manager endpoint), only when a tutor downloads.
+let cfKeyPromise;
+const cfPrivateKey = () => {
+  if (!cfKeyPromise) {
+    cfKeyPromise = sm.send(new GetSecretValueCommand({ SecretId: process.env.CF_KEY_SECRET }))
+      .then((r) => r.SecretString)
+      .catch((e) => { cfKeyPromise = undefined; throw e; });
+  }
+  return cfKeyPromise;
+};
 
 const GRACE_SECONDS = 60;
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
@@ -248,29 +257,24 @@ route('GET', '/api/assignments/{id}/submissions', async (_e, user, p) => {
   requireRole(user, 'tutors', 'admins');
   const r = await db.query(
     'SELECT * FROM submissions WHERE assignment_id = $1 ORDER BY received_at DESC', [p.id]);
-  const rows = await Promise.all(r.rows.map(async (s) => ({
+  // A3: signed CloudFront URLs (1 TB/month free) instead of S3 presigned GETs ($0.12/GB from Singapore).
+  const privateKey = r.rows.length ? await cfPrivateKey() : null;
+  const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  const rows = r.rows.map((s) => ({
     ...s,
     downloadUrl: s.status === 'received'
-      ? await getSignedUrl(s3, new GetObjectCommand({ Bucket: process.env.UPLOAD_BUCKET, Key: s.s3_key }), { expiresIn: 900 })
+      ? getSignedUrl({
+        url: `${process.env.SITE_URL}/${s.s3_key.split('/').map(encodeURIComponent).join('/')}`,
+        keyPairId: process.env.CF_KEY_PAIR_ID,
+        privateKey,
+        dateLessThan: expires,
+      })
       : null,
-  })));
+  }));
   return json(200, rows);
 });
 
-// ---------- admin ----------
-route('POST', '/api/admin/users', async (event, user) => {
-  requireRole(user, 'admins');
-  const b = parseBody(event);
-  if (!b.email || !['students', 'tutors', 'admins'].includes(b.group)) throw new HttpError(400, 'email and group required');
-  await cognito.send(new AdminCreateUserCommand({
-    UserPoolId: process.env.USER_POOL_ID,
-    Username: b.email,
-    UserAttributes: [{ Name: 'email', Value: b.email }, { Name: 'email_verified', Value: 'true' }],
-    DesiredDeliveryMediums: ['EMAIL'],
-  }));
-  await cognito.send(new AdminAddUserToGroupCommand({ UserPoolId: process.env.USER_POOL_ID, Username: b.email, GroupName: b.group }));
-  return json(201, { created: b.email, group: b.group });
-});
+// Admin routes (/api/admin/*) are served by src/admin.js, a separate Lambda outside the VPC.
 
 // ---------- dispatcher ----------
 exports.handler = async (event) => {
@@ -288,7 +292,7 @@ exports.handler = async (event) => {
     return json(404, { error: 'Not found' });
   } catch (err) {
     if (err instanceof HttpError) return json(err.status, { error: err.message });
-    console.error(JSON.stringify({ level: 'error', path, method, message: err.message, stack: err.stack }));
+    console.error(JSON.stringify({ level: 'ERROR', path, method, code: err.code, message: err.message, stack: err.stack }));
     return json(500, { error: 'Internal error' });
   }
 };

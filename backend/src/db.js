@@ -1,51 +1,52 @@
 'use strict';
-// Connection to PostgreSQL through RDS Proxy. Credentials come from the
-// RDS-managed secret in Secrets Manager; the pool is reused across warm invocations.
+// PostgreSQL through RDS Proxy with IAM authentication (A3).
+// The token is signed locally from the Lambda role's credentials, so no network call to
+// Secrets Manager is needed at runtime (and no NAT gateway). Tokens last 15 minutes;
+// pg calls the password function for every new connection, so they never go stale.
 const { Pool } = require('pg');
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
+const { Signer } = require('@aws-sdk/rds-signer');
 
-const sm = new SecretsManagerClient({});
-let poolPromise;
+const signer = new Signer({
+  hostname: process.env.DB_HOST,
+  port: 5432,
+  username: process.env.DB_USER,
+  region: process.env.AWS_REGION,
+});
 
-async function createPool() {
-  const res = await sm.send(new GetSecretValueCommand({ SecretId: process.env.DB_SECRET_ARN }));
-  const { username, password } = JSON.parse(res.SecretString);
-  const pool = new Pool({
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    user: username,
-    password,
-    port: 5432,
-    ssl: { rejectUnauthorized: true }, // RDS Proxy presents an ACM (publicly trusted) certificate
-    max: 2,                            // one Lambda handles one request at a time; RDS Proxy does the pooling
-    idleTimeoutMillis: 60000,
-    connectionTimeoutMillis: 5000,
-  });
-  pool.on('error', () => { poolPromise = undefined; });
+let pool;
+
+function getPool() {
+  if (!pool) {
+    pool = new Pool({
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: () => signer.getAuthToken(),
+      port: 5432,
+      ssl: { rejectUnauthorized: true }, // RDS Proxy presents an ACM (publicly trusted) certificate
+      max: 2,                            // one request per Lambda at a time; RDS Proxy does the pooling
+      idleTimeoutMillis: 60000,
+      connectionTimeoutMillis: 5000,
+    });
+    pool.on('error', () => { pool = undefined; });
+  }
   return pool;
 }
 
-async function getPool() {
-  if (!poolPromise) poolPromise = createPool().catch((e) => { poolPromise = undefined; throw e; });
-  return poolPromise;
-}
+const RETRYABLE = ['ECONNRESET', 'ETIMEDOUT', '57P01', '57P03', '08006', '08003'];
 
 async function query(text, params) {
-  const pool = await getPool();
   try {
-    return await pool.query(text, params);
+    return await getPool().query(text, params);
   } catch (err) {
-    // During a Multi-AZ failover existing connections are dropped: retry once on a fresh connection.
-    if (['ECONNRESET', '57P01', '57P03', '08006', '08003'].includes(err.code)) {
-      return pool.query(text, params);
-    }
+    // During a Multi-AZ failover existing connections drop: retry once on a fresh connection.
+    if (RETRYABLE.includes(err.code)) return getPool().query(text, params);
     throw err;
   }
 }
 
 async function tx(fn) {
-  const pool = await getPool();
-  const client = await pool.connect();
+  const client = await getPool().connect();
   try {
     await client.query('BEGIN');
     const out = await fn(client);

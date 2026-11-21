@@ -1,14 +1,15 @@
 'use strict';
-const { SESv2Client, SendEmailCommand } = require('@aws-sdk/client-sesv2');
+// A3: functions inside the VPC no longer call SES directly (that needed a NAT gateway).
+// They queue the email; the mailer Lambda, which runs outside the VPC, sends it.
+const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 
-const ses = new SESv2Client({});
+const sqs = new SQSClient({});
 
-async function sendEmail(to, subject, text) {
-  return ses.send(new SendEmailCommand({
-    FromEmailAddress: process.env.SES_SENDER,
-    Destination: { ToAddresses: [to] },
-    Content: { Simple: { Subject: { Data: subject }, Body: { Text: { Data: text } } } },
+async function queueEmail(to, subject, text, dedupeKey) {
+  return sqs.send(new SendMessageCommand({
+    QueueUrl: process.env.EMAIL_QUEUE,
+    MessageBody: JSON.stringify({ to, subject, text, dedupeKey }),
   }));
 }
 
-module.exports = { sendEmail };
+module.exports = { queueEmail, sendEmail: queueEmail };

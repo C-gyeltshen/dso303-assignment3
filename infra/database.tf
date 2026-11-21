@@ -21,7 +21,7 @@ resource "aws_db_instance" "main" {
   identifier     = "${local.name}-db"
   engine         = "postgres"
   engine_version = "16"
-  instance_class = var.db_instance_class
+  instance_class = var.exam_mode ? var.db_instance_class_exam : var.db_instance_class
   db_name        = "exams"
   username       = "exam_admin"
 
@@ -87,9 +87,11 @@ resource "aws_db_proxy" "main" {
   require_tls            = true
   idle_client_timeout    = 1800
 
+  # A3: Lambdas authenticate to the proxy with short-lived IAM tokens (signed locally),
+  # so they never call Secrets Manager at runtime. The proxy itself uses the secret.
   auth {
     auth_scheme = "SECRETS"
-    iam_auth    = "DISABLED"
+    iam_auth    = "REQUIRED"
     secret_arn  = aws_db_instance.main.master_user_secret[0].secret_arn
   }
 }
@@ -119,13 +121,7 @@ resource "aws_backup_vault" "main" {
 resource "aws_backup_plan" "main" {
   name = "${local.name}-plan"
 
-  rule {
-    rule_name         = "daily-35d"
-    target_vault_name = aws_backup_vault.main.name
-    schedule          = "cron(0 19 * * ? *)"
-    lifecycle { delete_after = 35 }
-  }
-
+  # A3: the daily AWS Backup rule was removed - RDS automated backups already give 35-day PITR.
   rule {
     rule_name         = "monthly-5y"
     target_vault_name = aws_backup_vault.main.name

@@ -1,21 +1,27 @@
 # Evidence
 
-## Cloud Architecture Lab (Task 3)
-Follow `../architecture/cloud-architecture-lab.md` and save the screenshots here:
+## Assignment 3
 
-- [ ] `lab-01-full-architecture.png`
-- [ ] `lab-02-walkthrough-exam-autosave.png`
-- [ ] `lab-03-walkthrough-upload-notify.png`
-- [ ] `lab-04-peak-load.png` (if the lab supports load)
-- [ ] `lab-05-az-a-failed.png`
-- [ ] `lab-06-after-failover.png`
+### Pricing Calculator exports (required)
+- [ ] `calculator-normal.csv` / `.pdf` – normal-month estimate (A3)
+- [ ] `calculator-exam.csv` / `.pdf` – exam-month estimate (A3)
+- [ ] `calculator-a2-normal.csv` – A2 baseline (to show the savings)
+- [ ] `calculator-mumbai.csv` – region comparison
+- [x] `cost-model.csv` – line items from `docs/cost-model.py` (generated)
 
-## Real AWS deployment (for the video)
-- [ ] `aws-01-pipeline-green.png` – GitHub Actions run after a push to `main`
-- [ ] `aws-02-exam-autosave.png` – exam page showing "Saved hh:mm:ss"
-- [ ] `aws-03-upload-progress.png` – 40 MB upload completing
-- [ ] `aws-04-tutor-email.png` – SES email received by the tutor
-- [ ] `aws-05-rds-multi-az.png` – RDS console: Multi-AZ = Yes, two AZs
-- [ ] `aws-06-s3-lifecycle.png` – uploads bucket lifecycle rule
-- [ ] `az-failover-log.txt` – produced by `scripts/simulate-az-loss.sh` (DB IP moves from 10.0.20.x to 10.0.21.x)
-- [ ] `aws-07-cloudwatch-dashboard.png`
+### Load test
+- [ ] `loadtest-R1-k6.json`, `loadtest-R1-metrics.json`, `loadtest-R1-dashboard.png` – baseline (bottleneck visible)
+- [ ] `loadtest-R2-*` – step-up (if R1 passed)
+- [ ] `loadtest-R3-k6.json`, `loadtest-R3-metrics.json`, `loadtest-R3-dashboard.png` – after the fix
+
+### Failure tests
+- [ ] `f1-az-loss-log.txt`, `f1-probe.csv`, screenshot of the RDS failover event
+- [ ] `f2-pitr-log.txt`
+- [ ] `f3-bad-deploy-log.txt`, screenshot of the 5xx alarm
+- [ ] `f4-before-k6.json`, `f4-before-waf-blocked.txt`, `f4-after-*`
+
+### Latency from Bhutan
+- [ ] `latency-thimphu.png` – cloudping.info (or curl timings) to ap-southeast-1 and ap-south-1
+
+## Assignment 2 (kept)
+Lab screenshots (`lab-0*.png`) and AWS deployment screenshots, as listed in the Assignment 2 README.

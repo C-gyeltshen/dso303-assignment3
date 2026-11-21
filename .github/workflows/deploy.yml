@@ -16,12 +16,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  AWS_REGION: ap-south-1
+  AWS_REGION: ap-southeast-1
   TF_IN_AUTOMATION: "true"
   TF_VAR_alarm_email: ${{ vars.ALARM_EMAIL }}
   TF_VAR_ses_sender_email: ${{ vars.SES_SENDER_EMAIL }}
   TF_VAR_ses_verify_emails: ${{ vars.SES_VERIFY_EMAILS || '[]' }}
-  TF_VAR_single_nat_gateway: ${{ vars.SINGLE_NAT_GATEWAY || 'true' }}
+  # exam_mode, DB class and campus CIDRs live in infra/prod.auto.tfvars, so changing them is a commit + push to main.
 
 jobs:
   test:
