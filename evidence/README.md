@@ -1,27 +1,20 @@
-# Evidence
+# Assignment 3 evidence
 
-## Assignment 3
+## Already recorded
 
-### Pricing Calculator exports (required)
-- [ ] `calculator-normal.csv` / `.pdf` – normal-month estimate (A3)
-- [ ] `calculator-exam.csv` / `.pdf` – exam-month estimate (A3)
-- [ ] `calculator-a2-normal.csv` – A2 baseline (to show the savings)
-- [ ] `calculator-mumbai.csv` – region comparison
-- [x] `cost-model.csv` – line items from `docs/cost-model.py` (generated)
+| Evidence | Where | Result |
+|---|---|---|
+| Singapore and Mumbai prices from the AWS Price List API, 24 Nov 2026 | [`../docs/pricing-sources.md`](../docs/pricing-sources.md) | Every unit price with its usage type and publication date |
+| Latency from Thimphu, Bhutan, 24 Nov 2026 | [`../docs/service-comparisons.md`](../docs/service-comparisons.md#latency-for-users-in-bhutan-measured) | Singapore median 110 ms, Mumbai 97 ms |
+| Cloud Architecture Lab: A3 design at a 100× spike | [`../implementation/lab/a3-L1-exam-start-100x.json`](../implementation/lab/a3-L1-exam-start-100x.json) | HTTP 200, 185 ms, no bottlenecks reported |
+| Cloud Architecture Lab: Analyze tab on the A3 design | [`../implementation/load-test.md`](../implementation/load-test.md) | 0 single points of failure, 0 bottlenecks; risks flagged: 1 task per AZ, plain HTTP from ALB to tasks, Cognito dependency concentration |
+| AZ-A outage with the same engine (Assignment 2 build) | `../../evidence/exam-platform-06-az-a-failure-exam-start.*` | HTTP 200, ALB moved to AZ-B, Aurora failover about 35 s |
 
-### Load test
-- [ ] `loadtest-R1-k6.json`, `loadtest-R1-metrics.json`, `loadtest-R1-dashboard.png` – baseline (bottleneck visible)
-- [ ] `loadtest-R2-*` – step-up (if R1 passed)
-- [ ] `loadtest-R3-k6.json`, `loadtest-R3-metrics.json`, `loadtest-R3-dashboard.png` – after the fix
+## Still to add before you submit
 
-### Failure tests
-- [ ] `f1-az-loss-log.txt`, `f1-probe.csv`, screenshot of the RDS failover event
-- [ ] `f2-pitr-log.txt`
-- [ ] `f3-bad-deploy-log.txt`, screenshot of the 5xx alarm
-- [ ] `f4-before-k6.json`, `f4-before-waf-blocked.txt`, `f4-after-*`
-
-### Latency from Bhutan
-- [ ] `latency-thimphu.png` – cloudping.info (or curl timings) to ap-southeast-1 and ap-south-1
-
-## Assignment 2 (kept)
-Lab screenshots (`lab-0*.png`) and AWS deployment screenshots, as listed in the Assignment 2 README.
+| # | What | How |
+|---|---|---|
+| 1 | AWS Pricing Calculator estimate (both groups) | Follow [`costed-estimate.md`](../implementation/costed-estimate.md). Save the share link, CSV, PDF and screenshots here |
+| 2 | Optimisation before/after screenshots | One pair per optimisation from the calculator |
+| 3 | Failure tests F1–F4 in the lab | Load each `a3-F*.json`, run it, then **Download PNG + JSON** into this folder |
+| 4 | Load test with CloudWatch graphs (real AWS) | The procedure in [`load-test.md`](../implementation/load-test.md); put before/after graphs in `load-test/` |

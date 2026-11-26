@@ -1,0 +1,3203 @@
+{
+ "format": "aws-architecture-lab",
+ "version": 2,
+ "applicationRelease": {
+  "version": "1.0.0",
+  "buildId": "e0a42ea0-ddb8-4c6f-ba18-8fe0f6b62f19",
+  "channel": "stable",
+  "builtAt": "2026-11-08T10:26:50.924Z",
+  "draftVersion": 2
+ },
+ "savedAt": "2026-11-22T17:09:34.041Z",
+ "state": {
+  "draftName": "A3 \u00b7 a3-00-design",
+  "nodes": [
+   {
+    "id": "vpc",
+    "type": "boundaryNode",
+    "position": {
+     "x": 100,
+     "y": 0
+    },
+    "style": {
+     "width": 1260,
+     "height": 1180
+    },
+    "data": {
+     "label": "exam-vpc",
+     "boundaryType": "vpc",
+     "width": 1260,
+     "height": 1180,
+     "cidr": "10.0.0.0/16",
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -4,
+    "measured": {
+     "width": 1260,
+     "height": 1180
+    }
+   },
+   {
+    "id": "az-a",
+    "type": "boundaryNode",
+    "position": {
+     "x": 125,
+     "y": 50
+    },
+    "style": {
+     "width": 600,
+     "height": 1100
+    },
+    "data": {
+     "label": "Availability Zone A",
+     "boundaryType": "az",
+     "width": 600,
+     "height": 1100,
+     "az": "AZ-A",
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -3,
+    "measured": {
+     "width": 600,
+     "height": 1100
+    }
+   },
+   {
+    "id": "az-b",
+    "type": "boundaryNode",
+    "position": {
+     "x": 735,
+     "y": 50
+    },
+    "style": {
+     "width": 600,
+     "height": 1100
+    },
+    "data": {
+     "label": "Availability Zone B",
+     "boundaryType": "az",
+     "width": 600,
+     "height": 1100,
+     "az": "AZ-B",
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -3,
+    "measured": {
+     "width": 600,
+     "height": 1100
+    }
+   },
+   {
+    "id": "pub-a",
+    "type": "boundaryNode",
+    "position": {
+     "x": 145,
+     "y": 90
+    },
+    "style": {
+     "width": 560,
+     "height": 230
+    },
+    "data": {
+     "label": "public-a \u00b7 AZ-A",
+     "boundaryType": "public_subnet",
+     "width": 560,
+     "height": 230,
+     "cidr": "10.0.0.0/19",
+     "az": "AZ-A",
+     "networkIdentity": {
+      "routeTableId": "rt-public"
+     },
+     "totalAddresses": 8192,
+     "usableHosts": 8187,
+     "reservedAddresses": [
+      {
+       "ip": "10.0.0.0",
+       "offset": 0,
+       "role": "Network Address",
+       "description": "First address in the subnet. Identifies the network itself."
+      },
+      {
+       "ip": "10.0.0.1",
+       "offset": 1,
+       "role": "VPC Router",
+       "description": "Reserved by AWS for the default VPC router / subnet gateway."
+      },
+      {
+       "ip": "10.0.0.2",
+       "offset": 2,
+       "role": "Amazon-Provided DNS",
+       "description": "Reserved by AWS for the DNS resolver (Route 53 Resolver / AmazonProvidedDNS)."
+      },
+      {
+       "ip": "10.0.0.3",
+       "offset": 3,
+       "role": "AWS Future Use",
+       "description": "Reserved by AWS for potential future internal functionality."
+      },
+      {
+       "ip": "10.0.31.255",
+       "offset": 8191,
+       "role": "Network Broadcast Address",
+       "description": "Last address in the subnet. AWS does not support broadcast in a VPC, but reserves the address."
+      }
+     ],
+     "usableRange": {
+      "start": "10.0.0.4",
+      "end": "10.0.31.254"
+     },
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -2,
+    "measured": {
+     "width": 560,
+     "height": 230
+    }
+   },
+   {
+    "id": "app-a",
+    "type": "boundaryNode",
+    "position": {
+     "x": 145,
+     "y": 350
+    },
+    "style": {
+     "width": 560,
+     "height": 360
+    },
+    "data": {
+     "label": "private-app-a \u00b7 AZ-A",
+     "boundaryType": "private_subnet",
+     "width": 560,
+     "height": 360,
+     "cidr": "10.0.64.0/19",
+     "az": "AZ-A",
+     "networkIdentity": {
+      "routeTableId": "rt-private-a"
+     },
+     "totalAddresses": 8192,
+     "usableHosts": 8187,
+     "reservedAddresses": [
+      {
+       "ip": "10.0.64.0",
+       "offset": 0,
+       "role": "Network Address",
+       "description": "First address in the subnet. Identifies the network itself."
+      },
+      {
+       "ip": "10.0.64.1",
+       "offset": 1,
+       "role": "VPC Router",
+       "description": "Reserved by AWS for the default VPC router / subnet gateway."
+      },
+      {
+       "ip": "10.0.64.2",
+       "offset": 2,
+       "role": "Amazon-Provided DNS",
+       "description": "Reserved by AWS for the DNS resolver (Route 53 Resolver / AmazonProvidedDNS)."
+      },
+      {
+       "ip": "10.0.64.3",
+       "offset": 3,
+       "role": "AWS Future Use",
+       "description": "Reserved by AWS for potential future internal functionality."
+      },
+      {
+       "ip": "10.0.95.255",
+       "offset": 8191,
+       "role": "Network Broadcast Address",
+       "description": "Last address in the subnet. AWS does not support broadcast in a VPC, but reserves the address."
+      }
+     ],
+     "usableRange": {
+      "start": "10.0.64.4",
+      "end": "10.0.95.254"
+     },
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -2,
+    "measured": {
+     "width": 560,
+     "height": 360
+    }
+   },
+   {
+    "id": "data-a",
+    "type": "boundaryNode",
+    "position": {
+     "x": 145,
+     "y": 740
+    },
+    "style": {
+     "width": 560,
+     "height": 380
+    },
+    "data": {
+     "label": "private-data-a \u00b7 AZ-A",
+     "boundaryType": "private_subnet",
+     "width": 560,
+     "height": 380,
+     "cidr": "10.0.128.0/19",
+     "az": "AZ-A",
+     "networkIdentity": {
+      "routeTableId": "rt-private-a"
+     },
+     "totalAddresses": 8192,
+     "usableHosts": 8187,
+     "reservedAddresses": [
+      {
+       "ip": "10.0.128.0",
+       "offset": 0,
+       "role": "Network Address",
+       "description": "First address in the subnet. Identifies the network itself."
+      },
+      {
+       "ip": "10.0.128.1",
+       "offset": 1,
+       "role": "VPC Router",
+       "description": "Reserved by AWS for the default VPC router / subnet gateway."
+      },
+      {
+       "ip": "10.0.128.2",
+       "offset": 2,
+       "role": "Amazon-Provided DNS",
+       "description": "Reserved by AWS for the DNS resolver (Route 53 Resolver / AmazonProvidedDNS)."
+      },
+      {
+       "ip": "10.0.128.3",
+       "offset": 3,
+       "role": "AWS Future Use",
+       "description": "Reserved by AWS for potential future internal functionality."
+      },
+      {
+       "ip": "10.0.159.255",
+       "offset": 8191,
+       "role": "Network Broadcast Address",
+       "description": "Last address in the subnet. AWS does not support broadcast in a VPC, but reserves the address."
+      }
+     ],
+     "usableRange": {
+      "start": "10.0.128.4",
+      "end": "10.0.159.254"
+     },
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -2,
+    "measured": {
+     "width": 560,
+     "height": 380
+    }
+   },
+   {
+    "id": "pub-b",
+    "type": "boundaryNode",
+    "position": {
+     "x": 755,
+     "y": 90
+    },
+    "style": {
+     "width": 560,
+     "height": 230
+    },
+    "data": {
+     "label": "public-b \u00b7 AZ-B",
+     "boundaryType": "public_subnet",
+     "width": 560,
+     "height": 230,
+     "cidr": "10.0.32.0/19",
+     "az": "AZ-B",
+     "networkIdentity": {
+      "routeTableId": "rt-public"
+     },
+     "totalAddresses": 8192,
+     "usableHosts": 8187,
+     "reservedAddresses": [
+      {
+       "ip": "10.0.32.0",
+       "offset": 0,
+       "role": "Network Address",
+       "description": "First address in the subnet. Identifies the network itself."
+      },
+      {
+       "ip": "10.0.32.1",
+       "offset": 1,
+       "role": "VPC Router",
+       "description": "Reserved by AWS for the default VPC router / subnet gateway."
+      },
+      {
+       "ip": "10.0.32.2",
+       "offset": 2,
+       "role": "Amazon-Provided DNS",
+       "description": "Reserved by AWS for the DNS resolver (Route 53 Resolver / AmazonProvidedDNS)."
+      },
+      {
+       "ip": "10.0.32.3",
+       "offset": 3,
+       "role": "AWS Future Use",
+       "description": "Reserved by AWS for potential future internal functionality."
+      },
+      {
+       "ip": "10.0.63.255",
+       "offset": 8191,
+       "role": "Network Broadcast Address",
+       "description": "Last address in the subnet. AWS does not support broadcast in a VPC, but reserves the address."
+      }
+     ],
+     "usableRange": {
+      "start": "10.0.32.4",
+      "end": "10.0.63.254"
+     },
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -2,
+    "measured": {
+     "width": 560,
+     "height": 230
+    }
+   },
+   {
+    "id": "app-b",
+    "type": "boundaryNode",
+    "position": {
+     "x": 755,
+     "y": 350
+    },
+    "style": {
+     "width": 560,
+     "height": 360
+    },
+    "data": {
+     "label": "private-app-b \u00b7 AZ-B",
+     "boundaryType": "private_subnet",
+     "width": 560,
+     "height": 360,
+     "cidr": "10.0.96.0/19",
+     "az": "AZ-B",
+     "networkIdentity": {
+      "routeTableId": "rt-private-b"
+     },
+     "totalAddresses": 8192,
+     "usableHosts": 8187,
+     "reservedAddresses": [
+      {
+       "ip": "10.0.96.0",
+       "offset": 0,
+       "role": "Network Address",
+       "description": "First address in the subnet. Identifies the network itself."
+      },
+      {
+       "ip": "10.0.96.1",
+       "offset": 1,
+       "role": "VPC Router",
+       "description": "Reserved by AWS for the default VPC router / subnet gateway."
+      },
+      {
+       "ip": "10.0.96.2",
+       "offset": 2,
+       "role": "Amazon-Provided DNS",
+       "description": "Reserved by AWS for the DNS resolver (Route 53 Resolver / AmazonProvidedDNS)."
+      },
+      {
+       "ip": "10.0.96.3",
+       "offset": 3,
+       "role": "AWS Future Use",
+       "description": "Reserved by AWS for potential future internal functionality."
+      },
+      {
+       "ip": "10.0.127.255",
+       "offset": 8191,
+       "role": "Network Broadcast Address",
+       "description": "Last address in the subnet. AWS does not support broadcast in a VPC, but reserves the address."
+      }
+     ],
+     "usableRange": {
+      "start": "10.0.96.4",
+      "end": "10.0.127.254"
+     },
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -2,
+    "measured": {
+     "width": 560,
+     "height": 360
+    }
+   },
+   {
+    "id": "data-b",
+    "type": "boundaryNode",
+    "position": {
+     "x": 755,
+     "y": 740
+    },
+    "style": {
+     "width": 560,
+     "height": 380
+    },
+    "data": {
+     "label": "private-data-b \u00b7 AZ-B",
+     "boundaryType": "private_subnet",
+     "width": 560,
+     "height": 380,
+     "cidr": "10.0.160.0/19",
+     "az": "AZ-B",
+     "networkIdentity": {
+      "routeTableId": "rt-private-b"
+     },
+     "totalAddresses": 8192,
+     "usableHosts": 8187,
+     "reservedAddresses": [
+      {
+       "ip": "10.0.160.0",
+       "offset": 0,
+       "role": "Network Address",
+       "description": "First address in the subnet. Identifies the network itself."
+      },
+      {
+       "ip": "10.0.160.1",
+       "offset": 1,
+       "role": "VPC Router",
+       "description": "Reserved by AWS for the default VPC router / subnet gateway."
+      },
+      {
+       "ip": "10.0.160.2",
+       "offset": 2,
+       "role": "Amazon-Provided DNS",
+       "description": "Reserved by AWS for the DNS resolver (Route 53 Resolver / AmazonProvidedDNS)."
+      },
+      {
+       "ip": "10.0.160.3",
+       "offset": 3,
+       "role": "AWS Future Use",
+       "description": "Reserved by AWS for potential future internal functionality."
+      },
+      {
+       "ip": "10.0.191.255",
+       "offset": 8191,
+       "role": "Network Broadcast Address",
+       "description": "Last address in the subnet. AWS does not support broadcast in a VPC, but reserves the address."
+      }
+     ],
+     "usableRange": {
+      "start": "10.0.160.4",
+      "end": "10.0.191.254"
+     },
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -2,
+    "measured": {
+     "width": 560,
+     "height": 380
+    }
+   },
+   {
+    "id": "sg-alb",
+    "type": "boundaryNode",
+    "position": {
+     "x": 2200,
+     "y": 40
+    },
+    "style": {
+     "width": 240,
+     "height": 120
+    },
+    "data": {
+     "label": "alb-sg (443 from CloudFront)",
+     "boundaryType": "security_group",
+     "width": 240,
+     "height": 120,
+     "allowedProtocols": [
+      "HTTP",
+      "HTTPS"
+     ],
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -4,
+    "measured": {
+     "width": 240,
+     "height": 120
+    }
+   },
+   {
+    "id": "sg-app",
+    "type": "boundaryNode",
+    "position": {
+     "x": 2200,
+     "y": 200
+    },
+    "style": {
+     "width": 240,
+     "height": 120
+    },
+    "data": {
+     "label": "app-sg (from alb-sg)",
+     "boundaryType": "security_group",
+     "width": 240,
+     "height": 120,
+     "securityGroupRules": {
+      "inbound": [
+       {
+        "protocol": "HTTP",
+        "portRange": "8080",
+        "source": {
+         "type": "securityGroup",
+         "securityGroupId": "sg-alb"
+        }
+       }
+      ],
+      "outbound": []
+     },
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -4,
+    "measured": {
+     "width": 240,
+     "height": 120
+    }
+   },
+   {
+    "id": "sg-data",
+    "type": "boundaryNode",
+    "position": {
+     "x": 2200,
+     "y": 360
+    },
+    "style": {
+     "width": 240,
+     "height": 120
+    },
+    "data": {
+     "label": "data-sg (5432 from app-sg, lambda-sg)",
+     "boundaryType": "security_group",
+     "width": 240,
+     "height": 120,
+     "securityGroupRules": {
+      "inbound": [
+       {
+        "protocol": "SQL",
+        "portRange": "5432",
+        "source": {
+         "type": "securityGroup",
+         "securityGroupId": "sg-app"
+        }
+       },
+       {
+        "protocol": "SQL",
+        "portRange": "5432",
+        "source": {
+         "type": "securityGroup",
+         "securityGroupId": "sg-lambda"
+        }
+       }
+      ],
+      "outbound": []
+     },
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -4,
+    "measured": {
+     "width": 240,
+     "height": 120
+    }
+   },
+   {
+    "id": "sg-lambda",
+    "type": "boundaryNode",
+    "position": {
+     "x": 2200,
+     "y": 520
+    },
+    "style": {
+     "width": 240,
+     "height": 120
+    },
+    "data": {
+     "label": "lambda-sg",
+     "boundaryType": "security_group",
+     "width": 240,
+     "height": 120,
+     "allowedProtocols": [
+      "HTTPS",
+      "SQL"
+     ],
+     "health": null
+    },
+    "draggable": true,
+    "selectable": true,
+    "zIndex": -4,
+    "measured": {
+     "width": 240,
+     "height": 120
+    }
+   },
+   {
+    "id": "user",
+    "type": "serviceNode",
+    "position": {
+     "x": -260,
+     "y": 380
+    },
+    "data": {
+     "serviceId": "user",
+     "label": "Student browser",
+     "category": "Client / Ingress",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 119,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 119,
+     "height": 82
+    },
+    "style": {
+     "width": 119,
+     "height": 82
+    }
+   },
+   {
+    "id": "uploader",
+    "type": "serviceNode",
+    "position": {
+     "x": -260,
+     "y": 620
+    },
+    "data": {
+     "serviceId": "user",
+     "label": "Student browser (upload)",
+     "category": "Client / Ingress",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "cognito",
+    "type": "serviceNode",
+    "position": {
+     "x": -260,
+     "y": 140
+    },
+    "data": {
+     "serviceId": "cognito",
+     "label": "Cognito user pool (Student/Tutor/Admin)",
+     "category": "Security, Identity & Compliance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 117
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 117
+    },
+    "style": {
+     "width": 140,
+     "height": 117
+    }
+   },
+   {
+    "id": "r53",
+    "type": "serviceNode",
+    "position": {
+     "x": -80,
+     "y": -260
+    },
+    "data": {
+     "serviceId": "route53",
+     "label": "Route 53 exam.uni.edu",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "waf",
+    "type": "serviceNode",
+    "position": {
+     "x": 110,
+     "y": -260
+    },
+    "data": {
+     "serviceId": "waf",
+     "label": "AWS WAF web ACL",
+     "category": "Security, Identity & Compliance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 135,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 135,
+     "height": 82
+    },
+    "style": {
+     "width": 135,
+     "height": 82
+    }
+   },
+   {
+    "id": "shield",
+    "type": "serviceNode",
+    "position": {
+     "x": 110,
+     "y": -420
+    },
+    "data": {
+     "serviceId": "shield",
+     "label": "Shield Standard",
+     "category": "Security, Identity & Compliance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 115,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 115,
+     "height": 82
+    },
+    "style": {
+     "width": 115,
+     "height": 82
+    }
+   },
+   {
+    "id": "cf",
+    "type": "serviceNode",
+    "position": {
+     "x": 300,
+     "y": -260
+    },
+    "data": {
+     "serviceId": "cloudfront",
+     "label": "CloudFront distribution",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "acm",
+    "type": "serviceNode",
+    "position": {
+     "x": 300,
+     "y": -420
+    },
+    "data": {
+     "serviceId": "acm",
+     "label": "ACM certificates",
+     "category": "Security, Identity & Compliance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 117,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 117,
+     "height": 82
+    },
+    "style": {
+     "width": 117,
+     "height": 82
+    }
+   },
+   {
+    "id": "s3web",
+    "type": "serviceNode",
+    "position": {
+     "x": 490,
+     "y": -260
+    },
+    "data": {
+     "serviceId": "s3",
+     "label": "S3 web app bucket (OAC)",
+     "category": "Storage",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "igw",
+    "type": "serviceNode",
+    "position": {
+     "x": 660,
+     "y": -110
+    },
+    "data": {
+     "serviceId": "internet_gateway",
+     "label": "exam-igw",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 100,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 100,
+     "height": 82
+    },
+    "style": {
+     "width": 100,
+     "height": 82
+    }
+   },
+   {
+    "id": "nat-a",
+    "type": "serviceNode",
+    "position": {
+     "x": 190,
+     "y": 170
+    },
+    "data": {
+     "serviceId": "nat_gateway",
+     "label": "nat-a",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "AZ-A",
+     "subnet": "public",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 100,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 100,
+     "height": 82
+    },
+    "style": {
+     "width": 100,
+     "height": 82
+    }
+   },
+   {
+    "id": "alb",
+    "type": "serviceNode",
+    "position": {
+     "x": 540,
+     "y": 170
+    },
+    "data": {
+     "serviceId": "alb",
+     "label": "exam-alb \u00b7 public A + B",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "public",
+     "replicas": 1,
+     "multiAz": true,
+     "securityGroupIds": [
+      "sg-alb"
+     ],
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "nat-b",
+    "type": "serviceNode",
+    "position": {
+     "x": 1150,
+     "y": 170
+    },
+    "data": {
+     "serviceId": "nat_gateway",
+     "label": "nat-b",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "AZ-B",
+     "subnet": "public",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 100,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 100,
+     "height": 82
+    },
+    "style": {
+     "width": 100,
+     "height": 82
+    }
+   },
+   {
+    "id": "ecs-a",
+    "type": "serviceNode",
+    "position": {
+     "x": 190,
+     "y": 420
+    },
+    "data": {
+     "serviceId": "ecs",
+     "label": "exam-api Fargate ARM \u00b7 AZ-A (baseline 1 task)",
+     "category": "Compute",
+     "health": "healthy",
+     "az": "AZ-A",
+     "subnet": "private",
+     "replicas": 1,
+     "multiAz": false,
+     "securityGroupIds": [
+      "sg-app"
+     ],
+     "customConfig": {
+      "ecs": {
+       "launchType": "FARGATE",
+       "networkMode": "awsvpc",
+       "desiredCount": 1,
+       "runningCount": 1,
+       "cpuArchitecture": "ARM64",
+       "cpu": 512,
+       "memory": 1024
+      }
+     },
+     "iamRole": {
+      "id": "ExamApiTaskRole",
+      "trustPolicy": {
+       "id": "ExamApiTaskRole-trust",
+       "kind": "trust",
+       "statements": [
+        {
+         "effect": "Allow",
+         "actions": [
+          "sts:AssumeRole"
+         ],
+         "resources": [],
+         "principals": [
+          "ecs-tasks.amazonaws.com"
+         ]
+        }
+       ]
+      },
+      "identityPolicies": [
+       {
+        "id": "ExamApiTaskRole-permissions",
+        "kind": "identity",
+        "statements": [
+         {
+          "effect": "Allow",
+          "actions": [
+           "dynamodb:GetItem",
+           "dynamodb:PutItem",
+           "dynamodb:UpdateItem",
+           "dynamodb:Query",
+           "events:PutEvents",
+           "s3:PutObject",
+           "s3:GetObject",
+           "secretsmanager:GetSecretValue",
+           "xray:PutTraceSegments",
+           "logs:PutLogEvents",
+           "cloudwatch:PutMetricData",
+           "cognito-idp:GetUser",
+           "kms:Decrypt",
+           "kms:GenerateDataKey",
+           "rds-db:connect",
+           "elasticache:Connect"
+          ],
+          "resources": [
+           "*"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "ecs-b",
+    "type": "serviceNode",
+    "position": {
+     "x": 1150,
+     "y": 420
+    },
+    "data": {
+     "serviceId": "ecs",
+     "label": "exam-api Fargate ARM \u00b7 AZ-B (baseline 1 task)",
+     "category": "Compute",
+     "health": "healthy",
+     "az": "AZ-B",
+     "subnet": "private",
+     "replicas": 1,
+     "multiAz": false,
+     "securityGroupIds": [
+      "sg-app"
+     ],
+     "customConfig": {
+      "ecs": {
+       "launchType": "FARGATE",
+       "networkMode": "awsvpc",
+       "desiredCount": 1,
+       "runningCount": 1,
+       "cpuArchitecture": "ARM64",
+       "cpu": 512,
+       "memory": 1024
+      }
+     },
+     "iamRole": {
+      "id": "ExamApiTaskRole",
+      "trustPolicy": {
+       "id": "ExamApiTaskRole-trust",
+       "kind": "trust",
+       "statements": [
+        {
+         "effect": "Allow",
+         "actions": [
+          "sts:AssumeRole"
+         ],
+         "resources": [],
+         "principals": [
+          "ecs-tasks.amazonaws.com"
+         ]
+        }
+       ]
+      },
+      "identityPolicies": [
+       {
+        "id": "ExamApiTaskRole-permissions",
+        "kind": "identity",
+        "statements": [
+         {
+          "effect": "Allow",
+          "actions": [
+           "dynamodb:GetItem",
+           "dynamodb:PutItem",
+           "dynamodb:UpdateItem",
+           "dynamodb:Query",
+           "events:PutEvents",
+           "s3:PutObject",
+           "s3:GetObject",
+           "secretsmanager:GetSecretValue",
+           "xray:PutTraceSegments",
+           "logs:PutLogEvents",
+           "cloudwatch:PutMetricData",
+           "cognito-idp:GetUser",
+           "kms:Decrypt",
+           "kms:GenerateDataKey",
+           "rds-db:connect",
+           "elasticache:Connect"
+          ],
+          "resources": [
+           "*"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "fn-mark",
+    "type": "serviceNode",
+    "position": {
+     "x": 420,
+     "y": 560
+    },
+    "data": {
+     "serviceId": "lambda",
+     "label": "marking-fn (Lambda ARM, reserved concurrency 10)",
+     "category": "Compute",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "private",
+     "replicas": 1,
+     "multiAz": true,
+     "securityGroupIds": [
+      "sg-lambda"
+     ],
+     "iamRole": {
+      "id": "MarkingFnRole",
+      "trustPolicy": {
+       "id": "MarkingFnRole-trust",
+       "kind": "trust",
+       "statements": [
+        {
+         "effect": "Allow",
+         "actions": [
+          "sts:AssumeRole"
+         ],
+         "resources": [],
+         "principals": [
+          "lambda.amazonaws.com"
+         ]
+        }
+       ]
+      },
+      "identityPolicies": [
+       {
+        "id": "MarkingFnRole-permissions",
+        "kind": "identity",
+        "statements": [
+         {
+          "effect": "Allow",
+          "actions": [
+           "sqs:ReceiveMessage",
+           "sqs:DeleteMessage",
+           "sqs:GetQueueAttributes",
+           "ses:SendEmail",
+           "ses:SendRawEmail",
+           "s3:GetObject",
+           "secretsmanager:GetSecretValue",
+           "rds-db:connect",
+           "logs:PutLogEvents",
+           "xray:PutTraceSegments",
+           "kms:Decrypt"
+          ],
+          "resources": [
+           "*"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "fn-notify",
+    "type": "serviceNode",
+    "position": {
+     "x": 900,
+     "y": 560
+    },
+    "data": {
+     "serviceId": "lambda",
+     "label": "submission-notify-fn (Lambda ARM, reserved conc. 10)",
+     "category": "Compute",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "private",
+     "replicas": 1,
+     "multiAz": true,
+     "securityGroupIds": [
+      "sg-lambda"
+     ],
+     "iamRole": {
+      "id": "SubmissionNotifyFnRole",
+      "trustPolicy": {
+       "id": "SubmissionNotifyFnRole-trust",
+       "kind": "trust",
+       "statements": [
+        {
+         "effect": "Allow",
+         "actions": [
+          "sts:AssumeRole"
+         ],
+         "resources": [],
+         "principals": [
+          "lambda.amazonaws.com"
+         ]
+        }
+       ]
+      },
+      "identityPolicies": [
+       {
+        "id": "SubmissionNotifyFnRole-permissions",
+        "kind": "identity",
+        "statements": [
+         {
+          "effect": "Allow",
+          "actions": [
+           "sqs:ReceiveMessage",
+           "sqs:DeleteMessage",
+           "sqs:GetQueueAttributes",
+           "ses:SendEmail",
+           "ses:SendRawEmail",
+           "s3:GetObject",
+           "secretsmanager:GetSecretValue",
+           "rds-db:connect",
+           "logs:PutLogEvents",
+           "xray:PutTraceSegments",
+           "kms:Decrypt"
+          ],
+          "resources": [
+           "*"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "aurora-a",
+    "type": "serviceNode",
+    "position": {
+     "x": 170,
+     "y": 800
+    },
+    "data": {
+     "serviceId": "aurora",
+     "label": "Aurora PostgreSQL db.t4g.medium writer (AZ-A)",
+     "category": "Databases",
+     "health": "healthy",
+     "az": "AZ-A",
+     "subnet": "private",
+     "replicas": 1,
+     "multiAz": true,
+     "securityGroupIds": [
+      "sg-data"
+     ],
+     "width": 140,
+     "height": 117
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 117
+    },
+    "style": {
+     "width": 140,
+     "height": 117
+    }
+   },
+   {
+    "id": "aurora-b",
+    "type": "serviceNode",
+    "position": {
+     "x": 1150,
+     "y": 800
+    },
+    "data": {
+     "serviceId": "aurora",
+     "label": "Aurora db.t4g.medium reader / failover (AZ-B)",
+     "category": "Databases",
+     "health": "healthy",
+     "az": "AZ-B",
+     "subnet": "private",
+     "replicas": 1,
+     "multiAz": false,
+     "securityGroupIds": [
+      "sg-data"
+     ],
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "s3ep",
+    "type": "serviceNode",
+    "position": {
+     "x": 420,
+     "y": 960
+    },
+    "data": {
+     "serviceId": "s3_gateway_endpoint",
+     "label": "S3 gateway endpoint",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "private",
+     "replicas": 1,
+     "multiAz": false,
+     "customConfig": {
+      "endpointService": "s3",
+      "routeTableIds": [
+       "rt-private-a",
+       "rt-private-b"
+      ]
+     },
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "rt-public",
+    "type": "serviceNode",
+    "position": {
+     "x": 150,
+     "y": 1260
+    },
+    "data": {
+     "serviceId": "route_tables",
+     "label": "rt-public \u2192 IGW",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "customConfig": {
+      "routeTable": {
+       "routes": [
+        {
+         "destinationCidr": "10.0.0.0/16",
+         "target": {
+          "type": "local"
+         }
+        },
+        {
+         "destinationCidr": "0.0.0.0/0",
+         "target": {
+          "type": "igw",
+          "targetId": "igw"
+         }
+        }
+       ]
+      }
+     },
+     "width": 116,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 116,
+     "height": 82
+    },
+    "style": {
+     "width": 116,
+     "height": 82
+    }
+   },
+   {
+    "id": "rt-private-a",
+    "type": "serviceNode",
+    "position": {
+     "x": 350,
+     "y": 1260
+    },
+    "data": {
+     "serviceId": "route_tables",
+     "label": "rt-private-a \u2192 nat-a",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "customConfig": {
+      "routeTable": {
+       "routes": [
+        {
+         "destinationCidr": "10.0.0.0/16",
+         "target": {
+          "type": "local"
+         }
+        },
+        {
+         "destinationCidr": "0.0.0.0/0",
+         "target": {
+          "type": "nat",
+          "targetId": "nat-a"
+         }
+        }
+       ]
+      }
+     },
+     "width": 139,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 139,
+     "height": 82
+    },
+    "style": {
+     "width": 139,
+     "height": 82
+    }
+   },
+   {
+    "id": "rt-private-b",
+    "type": "serviceNode",
+    "position": {
+     "x": 550,
+     "y": 1260
+    },
+    "data": {
+     "serviceId": "route_tables",
+     "label": "rt-private-b \u2192 nat-b",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "customConfig": {
+      "routeTable": {
+       "routes": [
+        {
+         "destinationCidr": "10.0.0.0/16",
+         "target": {
+          "type": "local"
+         }
+        },
+        {
+         "destinationCidr": "0.0.0.0/0",
+         "target": {
+          "type": "nat",
+          "targetId": "nat-b"
+         }
+        }
+       ]
+      }
+     },
+     "width": 140,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 82
+    },
+    "style": {
+     "width": 140,
+     "height": 82
+    }
+   },
+   {
+    "id": "ddb",
+    "type": "serviceNode",
+    "position": {
+     "x": 1500,
+     "y": 380
+    },
+    "data": {
+     "serviceId": "dynamodb",
+     "label": "DynamoDB AnswerDrafts (on-demand, PITR)",
+     "category": "Databases",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": true,
+     "width": 140,
+     "height": 117
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 117
+    },
+    "style": {
+     "width": 140,
+     "height": 117
+    }
+   },
+   {
+    "id": "s3up",
+    "type": "serviceNode",
+    "position": {
+     "x": 1500,
+     "y": 620
+    },
+    "data": {
+     "serviceId": "s3",
+     "label": "S3 assignments (Standard \u2192 IA 30 d, SSE-KMS)",
+     "category": "Storage",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": true,
+     "width": 140,
+     "height": 117
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 117
+    },
+    "style": {
+     "width": 140,
+     "height": 117
+    }
+   },
+   {
+    "id": "glacier",
+    "type": "serviceNode",
+    "position": {
+     "x": 1500,
+     "y": 820
+    },
+    "data": {
+     "serviceId": "s3_glacier",
+     "label": "Glacier Flexible (after 180 d, delete at 5 yr)",
+     "category": "Storage",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "backup",
+    "type": "serviceNode",
+    "position": {
+     "x": 1500,
+     "y": 1020
+    },
+    "data": {
+     "serviceId": "backup",
+     "label": "AWS Backup (daily 35 d + monthly kept 5 yr)",
+     "category": "Storage",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "eb",
+    "type": "serviceNode",
+    "position": {
+     "x": 1700,
+     "y": 620
+    },
+    "data": {
+     "serviceId": "eventbridge",
+     "label": "EventBridge rules",
+     "category": "Integration & Messaging",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": true,
+     "width": 125,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 125,
+     "height": 82
+    },
+    "style": {
+     "width": 125,
+     "height": 82
+    }
+   },
+   {
+    "id": "sqs",
+    "type": "serviceNode",
+    "position": {
+     "x": 1700,
+     "y": 820
+    },
+    "data": {
+     "serviceId": "sqs",
+     "label": "SQS submissions queue",
+     "category": "Integration & Messaging",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": true,
+     "customConfig": {
+      "redrivePolicy": {
+       "deadLetterTargetId": "dlq",
+       "maxReceiveCount": 5
+      },
+      "visibilityTimeoutSeconds": 180
+     },
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "dlq",
+    "type": "serviceNode",
+    "position": {
+     "x": 1700,
+     "y": 1020
+    },
+    "data": {
+     "serviceId": "sqs_dlq",
+     "label": "Dead-letter queue",
+     "category": "Integration & Messaging",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 129,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 129,
+     "height": 82
+    },
+    "style": {
+     "width": 129,
+     "height": 82
+    }
+   },
+   {
+    "id": "ses",
+    "type": "serviceNode",
+    "position": {
+     "x": 1700,
+     "y": 380
+    },
+    "data": {
+     "serviceId": "ses",
+     "label": "SES (results + tutor email)",
+     "category": "Business Applications",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": true,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "secrets",
+    "type": "serviceNode",
+    "position": {
+     "x": 1900,
+     "y": 140
+    },
+    "data": {
+     "serviceId": "secrets_manager",
+     "label": "Secrets Manager (DB creds)",
+     "category": "Security, Identity & Compliance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "kms",
+    "type": "serviceNode",
+    "position": {
+     "x": 1900,
+     "y": 300
+    },
+    "data": {
+     "serviceId": "kms",
+     "label": "KMS customer keys",
+     "category": "Security, Identity & Compliance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 137,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 137,
+     "height": 82
+    },
+    "style": {
+     "width": 137,
+     "height": 82
+    }
+   },
+   {
+    "id": "iam",
+    "type": "serviceNode",
+    "position": {
+     "x": 1900,
+     "y": 460
+    },
+    "data": {
+     "serviceId": "iam",
+     "label": "IAM roles (task, lambda, pipeline)",
+     "category": "Security, Identity & Compliance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "cw",
+    "type": "serviceNode",
+    "position": {
+     "x": 1900,
+     "y": 620
+    },
+    "data": {
+     "serviceId": "cloudwatch",
+     "label": "CloudWatch logs, alarms",
+     "category": "Management & Governance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "xray",
+    "type": "serviceNode",
+    "position": {
+     "x": 1900,
+     "y": 780
+    },
+    "data": {
+     "serviceId": "xray",
+     "label": "X-Ray tracing",
+     "category": "Developer Tools",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 100,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 100,
+     "height": 82
+    },
+    "style": {
+     "width": 100,
+     "height": 82
+    }
+   },
+   {
+    "id": "sns",
+    "type": "serviceNode",
+    "position": {
+     "x": 1900,
+     "y": 940
+    },
+    "data": {
+     "serviceId": "sns",
+     "label": "SNS ops alerts",
+     "category": "Integration & Messaging",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 106,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 106,
+     "height": 82
+    },
+    "style": {
+     "width": 106,
+     "height": 82
+    }
+   },
+   {
+    "id": "trail",
+    "type": "serviceNode",
+    "position": {
+     "x": 1900,
+     "y": 1100
+    },
+    "data": {
+     "serviceId": "cloudtrail",
+     "label": "CloudTrail (5-yr)",
+     "category": "Management & Governance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 116,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 116,
+     "height": 82
+    },
+    "style": {
+     "width": 116,
+     "height": 82
+    }
+   },
+   {
+    "id": "gd",
+    "type": "serviceNode",
+    "position": {
+     "x": 1900,
+     "y": 1260
+    },
+    "data": {
+     "serviceId": "guardduty",
+     "label": "GuardDuty",
+     "category": "Security, Identity & Compliance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 100,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 100,
+     "height": 82
+    },
+    "style": {
+     "width": 100,
+     "height": 82
+    }
+   },
+   {
+    "id": "gh",
+    "type": "serviceNode",
+    "position": {
+     "x": 800,
+     "y": 1420
+    },
+    "data": {
+     "serviceId": "github",
+     "label": "GitHub repo (main)",
+     "category": "Third-Party & External",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 133,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 133,
+     "height": 82
+    },
+    "style": {
+     "width": 133,
+     "height": 82
+    }
+   },
+   {
+    "id": "pipe",
+    "type": "serviceNode",
+    "position": {
+     "x": 1000,
+     "y": 1420
+    },
+    "data": {
+     "serviceId": "codepipeline",
+     "label": "CodePipeline",
+     "category": "Developer Tools",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "iamRole": {
+      "id": "CodePipelineRole",
+      "trustPolicy": {
+       "id": "CodePipelineRole-trust",
+       "kind": "trust",
+       "statements": [
+        {
+         "effect": "Allow",
+         "actions": [
+          "sts:AssumeRole"
+         ],
+         "resources": [],
+         "principals": [
+          "codepipeline.amazonaws.com"
+         ]
+        }
+       ]
+      },
+      "identityPolicies": [
+       {
+        "id": "CodePipelineRole-permissions",
+        "kind": "identity",
+        "statements": [
+         {
+          "effect": "Allow",
+          "actions": [
+           "codebuild:StartBuild",
+           "cloudformation:*",
+           "ecs:UpdateService",
+           "iam:PassRole"
+          ],
+          "resources": [
+           "*"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "width": 100,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 100,
+     "height": 82
+    },
+    "style": {
+     "width": 100,
+     "height": 82
+    }
+   },
+   {
+    "id": "build",
+    "type": "serviceNode",
+    "position": {
+     "x": 1200,
+     "y": 1420
+    },
+    "data": {
+     "serviceId": "codebuild",
+     "label": "CodeBuild (test, build)",
+     "category": "Developer Tools",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "iamRole": {
+      "id": "CodeBuildRole",
+      "trustPolicy": {
+       "id": "CodeBuildRole-trust",
+       "kind": "trust",
+       "statements": [
+        {
+         "effect": "Allow",
+         "actions": [
+          "sts:AssumeRole"
+         ],
+         "resources": [],
+         "principals": [
+          "codebuild.amazonaws.com"
+         ]
+        }
+       ]
+      },
+      "identityPolicies": [
+       {
+        "id": "CodeBuildRole-permissions",
+        "kind": "identity",
+        "statements": [
+         {
+          "effect": "Allow",
+          "actions": [
+           "ecr:*",
+           "s3:PutObject",
+           "logs:PutLogEvents"
+          ],
+          "resources": [
+           "*"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "ecr",
+    "type": "serviceNode",
+    "position": {
+     "x": 1400,
+     "y": 1420
+    },
+    "data": {
+     "serviceId": "ecr_registry",
+     "label": "ECR exam-api images",
+     "category": "Containers",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "cfn",
+    "type": "serviceNode",
+    "position": {
+     "x": 1200,
+     "y": 1580
+    },
+    "data": {
+     "serviceId": "cloudformation",
+     "label": "CloudFormation stacks",
+     "category": "Management & Governance",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": false,
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "ddbep",
+    "type": "serviceNode",
+    "position": {
+     "x": 900,
+     "y": 960
+    },
+    "data": {
+     "serviceId": "s3_gateway_endpoint",
+     "label": "DynamoDB gateway endpoint",
+     "category": "Networking & Content Delivery",
+     "health": "healthy",
+     "az": "Edge / Global",
+     "subnet": "private",
+     "replicas": 1,
+     "multiAz": false,
+     "customConfig": {
+      "endpointService": "dynamodb",
+      "routeTableIds": [
+       "rt-private-a",
+       "rt-private-b"
+      ]
+     },
+     "width": 140,
+     "height": 99
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 140,
+     "height": 99
+    },
+    "style": {
+     "width": 140,
+     "height": 99
+    }
+   },
+   {
+    "id": "sqs-mark",
+    "type": "serviceNode",
+    "position": {
+     "x": 1700,
+     "y": 1180
+    },
+    "data": {
+     "serviceId": "sqs",
+     "label": "SQS marking queue",
+     "category": "Integration & Messaging",
+     "health": "healthy",
+     "az": "Multi-AZ",
+     "subnet": "global",
+     "replicas": 1,
+     "multiAz": true,
+     "customConfig": {
+      "redrivePolicy": {
+       "deadLetterTargetId": "dlq",
+       "maxReceiveCount": 5
+      },
+      "visibilityTimeoutSeconds": 180
+     },
+     "width": 138,
+     "height": 82
+    },
+    "zIndex": 10,
+    "measured": {
+     "width": 138,
+     "height": 82
+    },
+    "style": {
+     "width": 138,
+     "height": 82
+    }
+   }
+  ],
+  "edges": [
+   {
+    "id": "user-r53",
+    "source": "user",
+    "target": "r53",
+    "type": "custom",
+    "data": {
+     "protocol": "DNS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 1
+    }
+   },
+   {
+    "id": "user-cognito",
+    "source": "user",
+    "target": "cognito",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "cf-acm",
+    "source": "cf",
+    "target": "acm",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "cf-s3web",
+    "source": "cf",
+    "target": "s3web",
+    "type": "custom",
+    "data": {
+     "protocol": "S3 API",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "cf-alb",
+    "source": "cf",
+    "target": "alb",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 4
+    }
+   },
+   {
+    "id": "alb-ecs-a",
+    "source": "alb",
+    "target": "ecs-a",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTP",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 5
+    }
+   },
+   {
+    "id": "alb-ecs-b",
+    "source": "alb",
+    "target": "ecs-b",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTP",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 6
+    }
+   },
+   {
+    "id": "ecs-a-cognito",
+    "source": "ecs-a",
+    "target": "cognito",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ecs-a-ddb",
+    "source": "ecs-a",
+    "target": "ddb",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "ecs-a-eb",
+    "source": "ecs-a",
+    "target": "eb",
+    "type": "custom",
+    "data": {
+     "protocol": "Event",
+     "interactionType": "event",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "ecs-a-secrets",
+    "source": "ecs-a",
+    "target": "secrets",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ecs-a-cw",
+    "source": "ecs-a",
+    "target": "cw",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ecs-a-xray",
+    "source": "ecs-a",
+    "target": "xray",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ecs-b-cognito",
+    "source": "ecs-b",
+    "target": "cognito",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ecs-b-ddb",
+    "source": "ecs-b",
+    "target": "ddb",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "ecs-b-eb",
+    "source": "ecs-b",
+    "target": "eb",
+    "type": "custom",
+    "data": {
+     "protocol": "Event",
+     "interactionType": "event",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "ecs-b-secrets",
+    "source": "ecs-b",
+    "target": "secrets",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ecs-b-cw",
+    "source": "ecs-b",
+    "target": "cw",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ecs-b-xray",
+    "source": "ecs-b",
+    "target": "xray",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "aurora-a-aurora-b",
+    "source": "aurora-a",
+    "target": "aurora-b",
+    "type": "custom",
+    "data": {
+     "protocol": "Replication",
+     "interactionType": "asynchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "uploader-s3up",
+    "source": "uploader",
+    "target": "s3up",
+    "type": "custom",
+    "data": {
+     "protocol": "S3 API",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "s3up-eb",
+    "source": "s3up",
+    "target": "eb",
+    "type": "custom",
+    "data": {
+     "protocol": "Event",
+     "interactionType": "event",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "eb-sqs",
+    "source": "eb",
+    "target": "sqs",
+    "type": "custom",
+    "data": {
+     "protocol": "Message",
+     "interactionType": "asynchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "sqs-fn-notify",
+    "source": "sqs",
+    "target": "fn-notify",
+    "type": "custom",
+    "data": {
+     "protocol": "Message",
+     "interactionType": "asynchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "fn-notify-ses",
+    "source": "fn-notify",
+    "target": "ses",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "fn-mark-ses",
+    "source": "fn-mark",
+    "target": "ses",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "sqs-dlq",
+    "source": "sqs",
+    "target": "dlq",
+    "type": "custom",
+    "data": {
+     "protocol": "Message",
+     "interactionType": "asynchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "s3up-glacier",
+    "source": "s3up",
+    "target": "glacier",
+    "type": "custom",
+    "data": {
+     "protocol": "S3 API",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "s3up-kms",
+    "source": "s3up",
+    "target": "kms",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ddb-kms",
+    "source": "ddb",
+    "target": "kms",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "aurora-a-kms",
+    "source": "aurora-a",
+    "target": "kms",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "backup-aurora-a",
+    "source": "backup",
+    "target": "aurora-a",
+    "type": "custom",
+    "data": {
+     "protocol": "ALL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "backup-ddb",
+    "source": "backup",
+    "target": "ddb",
+    "type": "custom",
+    "data": {
+     "protocol": "ALL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "cw-sns",
+    "source": "cw",
+    "target": "sns",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "gd-trail",
+    "source": "gd",
+    "target": "trail",
+    "type": "custom",
+    "data": {
+     "protocol": "ALL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "nat-a-igw",
+    "source": "nat-a",
+    "target": "igw",
+    "type": "custom",
+    "data": {
+     "protocol": "TCP",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "nat-b-igw",
+    "source": "nat-b",
+    "target": "igw",
+    "type": "custom",
+    "data": {
+     "protocol": "TCP",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "gh-pipe",
+    "source": "gh",
+    "target": "pipe",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "event",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "pipe-build",
+    "source": "pipe",
+    "target": "build",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "build-ecr",
+    "source": "build",
+    "target": "ecr",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "pipe-cfn",
+    "source": "pipe",
+    "target": "cfn",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "cfn-ecs-a",
+    "source": "cfn",
+    "target": "ecs-a",
+    "type": "custom",
+    "data": {
+     "protocol": "ALL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "build-s3web",
+    "source": "build",
+    "target": "s3web",
+    "type": "custom",
+    "data": {
+     "protocol": "S3 API",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "r53-waf",
+    "source": "r53",
+    "target": "waf",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 2
+    }
+   },
+   {
+    "id": "waf-cf",
+    "source": "waf",
+    "target": "cf",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 3
+    }
+   },
+   {
+    "id": "shield-waf",
+    "source": "shield",
+    "target": "waf",
+    "type": "custom",
+    "data": {
+     "protocol": "ALL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ecs-a-aurora-a",
+    "source": "ecs-a",
+    "target": "aurora-a",
+    "type": "custom",
+    "data": {
+     "protocol": "SQL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 7
+    }
+   },
+   {
+    "id": "ecs-b-aurora-a",
+    "source": "ecs-b",
+    "target": "aurora-a",
+    "type": "custom",
+    "data": {
+     "protocol": "SQL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 8
+    }
+   },
+   {
+    "id": "s3ep-s3up",
+    "source": "s3ep",
+    "target": "s3up",
+    "type": "custom",
+    "data": {
+     "protocol": "S3 API",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "ddbep-ddb",
+    "source": "ddbep",
+    "target": "ddb",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "eb-sqs-mark",
+    "source": "eb",
+    "target": "sqs-mark",
+    "type": "custom",
+    "data": {
+     "protocol": "Message",
+     "interactionType": "asynchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "sqs-mark-fn-mark",
+    "source": "sqs-mark",
+    "target": "fn-mark",
+    "type": "custom",
+    "data": {
+     "protocol": "Message",
+     "interactionType": "asynchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "sqs-mark-dlq",
+    "source": "sqs-mark",
+    "target": "dlq",
+    "type": "custom",
+    "data": {
+     "protocol": "Message",
+     "interactionType": "asynchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "cfn-ecs-b",
+    "source": "cfn",
+    "target": "ecs-b",
+    "type": "custom",
+    "data": {
+     "protocol": "ALL",
+     "interactionType": "synchronous",
+     "traversal": "dependency",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "ecs-a-aurora-b",
+    "source": "ecs-a",
+    "target": "aurora-b",
+    "type": "custom",
+    "data": {
+     "protocol": "SQL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 9
+    }
+   },
+   {
+    "id": "ecs-b-aurora-b",
+    "source": "ecs-b",
+    "target": "aurora-b",
+    "type": "custom",
+    "data": {
+     "protocol": "SQL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500,
+     "stepNumber": 10
+    }
+   },
+   {
+    "id": "fn-notify-aurora-a",
+    "source": "fn-notify",
+    "target": "aurora-a",
+    "type": "custom",
+    "data": {
+     "protocol": "SQL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "fn-notify-aurora-b",
+    "source": "fn-notify",
+    "target": "aurora-b",
+    "type": "custom",
+    "data": {
+     "protocol": "SQL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "fn-notify-secrets",
+    "source": "fn-notify",
+    "target": "secrets",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   },
+   {
+    "id": "fn-mark-aurora-a",
+    "source": "fn-mark",
+    "target": "aurora-a",
+    "type": "custom",
+    "data": {
+     "protocol": "SQL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "fn-mark-aurora-b",
+    "source": "fn-mark",
+    "target": "aurora-b",
+    "type": "custom",
+    "data": {
+     "protocol": "SQL",
+     "interactionType": "synchronous",
+     "isCriticalDependency": true,
+     "timeoutMs": 1500
+    }
+   },
+   {
+    "id": "fn-mark-secrets",
+    "source": "fn-mark",
+    "target": "secrets",
+    "type": "custom",
+    "data": {
+     "protocol": "HTTPS",
+     "interactionType": "synchronous",
+     "isCriticalDependency": false,
+     "timeoutMs": 1500,
+     "traversal": "dependency"
+    }
+   }
+  ],
+  "scenario": {
+   "id": "a3",
+   "name": "A3 design",
+   "method": "GET",
+   "path": "/api/exams/1/start",
+   "startNodeId": "user",
+   "trafficLevel": "normal"
+  },
+  "simulationResult": null,
+  "activeFailures": [],
+  "activeLabReference": null,
+  "activeChallengeId": null,
+  "challengeResult": null,
+  "appMode": "simulate",
+  "selectedNodeId": null,
+  "selectedEdgeId": null,
+  "activeStepIndex": null,
+  "playbackSpeed": 1,
+  "highlightTaskFlow": true,
+  "showNaclSideColumn": false,
+  "viewport": {
+   "x": 400,
+   "y": 250,
+   "zoom": 0.35
+  }
+ }
+}
